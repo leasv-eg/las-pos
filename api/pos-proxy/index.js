@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+const https = require('https');
+const { URL } = require('url');
 
 module.exports = async function (context, req) {
     // Set CORS headers
@@ -47,21 +48,62 @@ module.exports = async function (context, req) {
         };
 
         // Add authorization header if present (check both cases)
+        // IMPORTANT: Azure Functions may override the Authorization header, so we need to preserve the original
         const authHeader = req.headers.authorization || req.headers.Authorization;
         if (authHeader) {
-            forwardHeaders['Authorization'] = authHeader;
+            // Store original auth header to preserve it from Azure Functions override
+            const originalAuth = authHeader;
+            forwardHeaders['Authorization'] = originalAuth;
             context.log(`[POS Proxy] Found authorization header: ${authHeader.substring(0, 20)}...`);
             context.log(`[POS Proxy] Full header length: ${authHeader.length}`);
+            context.log(`[POS Proxy] Preserving original auth: ${originalAuth === authHeader ? 'YES' : 'NO'}`);
         } else {
             context.log(`[POS Proxy] No authorization header found in request`);
             context.log(`[POS Proxy] Available headers:`, Object.keys(req.headers));
         }
 
-        // Forward the request to the POS API
-        const response = await fetch(targetUrl, {
+        context.log(`[POS Proxy] Final forwarded headers:`, forwardHeaders);
+
+        // Use native https module to avoid Azure Functions auth injection
+        const targetURL = new URL(targetUrl);
+        const requestBody = req.method !== 'GET' && req.body ? JSON.stringify(req.body) : null;
+        
+        const options = {
+            hostname: targetURL.hostname,
+            port: 443,
+            path: targetURL.pathname + targetURL.search,
             method: req.method,
-            headers: forwardHeaders,
-            body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined
+            headers: forwardHeaders
+        };
+
+        context.log(`[POS Proxy] Making request to: ${targetURL.hostname}${targetURL.pathname}${targetURL.search}`);
+
+        // Make the request using native https
+        const response = await new Promise((resolve, reject) => {
+            const request = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                res.on('end', () => {
+                    resolve({
+                        status: res.statusCode,
+                        statusText: res.statusMessage,
+                        headers: res.headers,
+                        text: () => Promise.resolve(data)
+                    });
+                });
+            });
+
+            request.on('error', (error) => {
+                reject(error);
+            });
+
+            if (requestBody) {
+                request.write(requestBody);
+            }
+            
+            request.end();
         });
 
         const responseData = await response.text();
@@ -72,7 +114,7 @@ module.exports = async function (context, req) {
             context.log(`[POS Proxy] Target URL was: ${targetUrl}`);
             context.log(`[POS Proxy] Forwarded headers:`, forwardHeaders);
         }
-        context.log(`[POS Proxy] Response headers:`, Object.fromEntries(response.headers.entries()));
+        context.log(`[POS Proxy] Response headers:`, response.headers);
         context.log(`[POS Proxy] Response body:`, responseData);
 
         // For debugging: if 401, include debug info in response
@@ -86,7 +128,7 @@ module.exports = async function (context, req) {
             status: response.status,
             headers: {
                 ...context.res.headers,
-                'Content-Type': response.headers.get('content-type') || 'application/json'
+                'Content-Type': response.headers['content-type'] || 'application/json'
             },
             body: responseData + debugInfo
         };
