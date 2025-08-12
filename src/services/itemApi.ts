@@ -55,6 +55,30 @@ class ItemServiceAPI {
     return !!(this.config?.bearerToken && this.config?.baseURL);
   }
 
+  // Get development mode status
+  private get isDevelopment(): boolean {
+    return import.meta.env.DEV || window.location.hostname === 'localhost';
+  }
+
+  // Get headers with proper authentication for Azure vs development
+  private getHeaders(): HeadersInit {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'lrs-userid': 'ZGV2ZWxvcGVy' // Default user ID from swagger docs
+    };
+
+    if (this.config?.bearerToken) {
+      if (this.isDevelopment) {
+        headers['Authorization'] = `Bearer ${this.config.bearerToken}`;
+      } else {
+        // In production (Azure), use custom header to avoid Azure's auth injection
+        headers['X-Item-Authorization'] = `Bearer ${this.config.bearerToken}`;
+      }
+    }
+
+    return headers;
+  }
+
   // Private method to make API calls
   private async makeRequest<T>(
     endpoint: string, 
@@ -69,16 +93,10 @@ class ItemServiceAPI {
 
     const url = `${this.config!.baseURL}${endpoint}`;
     
-    const defaultHeaders: HeadersInit = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.config!.bearerToken}`,
-      'lrs-userid': 'ZGV2ZWxvcGVy' // Default user ID from swagger docs
-    };
-
     const requestOptions: RequestInit = {
       ...options,
       headers: {
-        ...defaultHeaders,
+        ...this.getHeaders(),
         ...options.headers
       }
     };
