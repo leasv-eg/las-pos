@@ -10,7 +10,11 @@ import {
 } from '../types';
 import { SampleDataService } from './sampleData';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.laspos.com/v1';
+// Use proxy route in production, direct URL in development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'https://api.laspos.com/v1' 
+    : '/posapi');
 
 class ApiService {
   private token: string | null = null;

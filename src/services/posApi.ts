@@ -5,9 +5,9 @@ export class POSApiService {
   private isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   private environments: EnvironmentConfig = {
-    dev: this.isDevelopment ? '/api/posapi-dev' : 'https://posapi.egretail-dev.cloud/api',
-    test: this.isDevelopment ? '/api/posapi-test' : 'https://posapi.egretail-test.cloud/api',
-    prod: this.isDevelopment ? '/api/posapi-prod' : 'https://posapi.egretail.cloud/api'
+    dev: this.isDevelopment ? '/api/posapi-dev' : '/posapi',
+    test: this.isDevelopment ? '/api/posapi-test' : '/posapi', 
+    prod: this.isDevelopment ? '/api/posapi-prod' : '/posapi'
   };
 
   private currentEnvironment: POSEnvironment = 'test';
