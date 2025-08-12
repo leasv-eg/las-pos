@@ -329,7 +329,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
       itemService.configure(itemBearerToken, itemEnvironment);
       
       // Simple test - try to get an item (will test authentication)
-      const testResult = await itemService.getItem({ gtin: '5711724072697' });
+      const posConfig = posApiService.getConfig();
+      const testResult = await itemService.getItem({ gtin: '5711724072697' }, { storeNumber: posConfig.storeNum });
       
       if (testResult.success) {
         setItemConnectionStatus('success');
@@ -368,7 +369,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
       itemService.configure(itemBearerToken, itemEnvironment);
       
       // Test with a sample barcode
-      const result = await itemService.getItem({ gtin: '5711724072697' });
+      const posConfig = posApiService.getConfig();
+      const result = await itemService.getItem({ gtin: '5711724072697' }, { storeNumber: posConfig.storeNum });
       
       console.log('🔍 Item lookup test result:', result);
       
@@ -421,7 +423,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
       console.log(`🔍 Testing GTIN: ${gtin}`);
       
       // Test with the specific GTIN
-      const result = await itemService.getItem({ gtin: gtin });
+      const posConfig = posApiService.getConfig();
+      const result = await itemService.getItem({ gtin: gtin }, { storeNumber: posConfig.storeNum });
       
       console.log('🔍 Specific GTIN test result:', JSON.stringify(result, null, 2));
       
