@@ -36,7 +36,7 @@ module.exports = async function (context, req) {
         const baseUrl = environments[environment] || environments.prod;
         const targetUrl = `${baseUrl}/${path}`;
 
-        context.log(`[POS Proxy] ${req.method} ${targetUrl}`);
+        context.log(`[POS Proxy v1.1] ${req.method} ${targetUrl}`);
         context.log(`[POS Proxy] Request headers:`, req.headers);
         context.log(`[POS Proxy] Request body:`, req.body);
 
