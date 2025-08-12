@@ -137,10 +137,10 @@ const SummaryLabel = styled.span`
   color: #666;
 `;
 
-const SummaryValue = styled.span<{ isTotal?: boolean }>`
-  font-weight: ${props => props.isTotal ? '600' : '400'};
-  color: ${props => props.isTotal ? '#333' : '#666'};
-  font-size: ${props => props.isTotal ? '16px' : '14px'};
+const SummaryValue = styled.span<{ $isTotal?: boolean }>`
+  font-weight: ${props => props.$isTotal ? '600' : '400'};
+  color: ${props => props.$isTotal ? '#333' : '#666'};
+  font-size: ${props => props.$isTotal ? '16px' : '14px'};
 `;
 
 const CheckoutButton = styled.button<{ disabled?: boolean }>`
@@ -281,7 +281,7 @@ export const BasketPanel: React.FC<BasketPanelProps> = ({
         <BasketSummary>
           <SummaryRow>
             <SummaryLabel>Total</SummaryLabel>
-            <SummaryValue isTotal>{formatCurrency(0)}</SummaryValue>
+            <SummaryValue $isTotal>{formatCurrency(0)}</SummaryValue>
           </SummaryRow>
         </BasketSummary>
       </BasketContainer>
@@ -362,7 +362,7 @@ export const BasketPanel: React.FC<BasketPanelProps> = ({
         
         <SummaryRow>
           <SummaryLabel>Total</SummaryLabel>
-          <SummaryValue isTotal>{formatCurrency(basket.totalAmount)}</SummaryValue>
+          <SummaryValue $isTotal>{formatCurrency(basket.totalAmount)}</SummaryValue>
         </SummaryRow>
       </BasketSummary>
 

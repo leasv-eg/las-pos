@@ -21,11 +21,11 @@ const KeypadContainer = styled.div`
   max-height: 400px;
 `;
 
-const KeypadButton = styled.button<{ isWide?: boolean; isAction?: boolean }>`
+const KeypadButton = styled.button<{ isWide?: boolean; $isAction?: boolean }>`
   height: 60px;
   border: 2px solid #e0e0e0;
-  background: ${props => props.isAction ? '#1976d2' : 'white'};
-  color: ${props => props.isAction ? 'white' : '#333'};
+  background: ${props => props.$isAction ? '#1976d2' : 'white'};
+  color: ${props => props.$isAction ? 'white' : '#333'};
   border-radius: 8px;
   font-size: 18px;
   font-weight: 500;
@@ -34,8 +34,8 @@ const KeypadButton = styled.button<{ isWide?: boolean; isAction?: boolean }>`
   grid-column: ${props => props.isWide ? 'span 2' : 'span 1'};
 
   &:hover {
-    background: ${props => props.isAction ? '#1565c0' : '#f5f5f5'};
-    border-color: ${props => props.isAction ? '#1565c0' : '#1976d2'};
+    background: ${props => props.$isAction ? '#1565c0' : '#f5f5f5'};
+    border-color: ${props => props.$isAction ? '#1565c0' : '#1976d2'};
   }
 
   &:active {
@@ -602,11 +602,11 @@ export const ActionPad: React.FC<ActionPadProps> = ({
         <KeypadButton onClick={() => handleKeypadPress('8')}>8</KeypadButton>
         <KeypadButton onClick={() => handleKeypadPress('9')}>9</KeypadButton>
         
-        <KeypadButton onClick={() => handleKeypadPress('C')} isAction>
+        <KeypadButton onClick={() => handleKeypadPress('C')} $isAction>
           Clear
         </KeypadButton>
         <KeypadButton onClick={() => handleKeypadPress('0')}>0</KeypadButton>
-        <KeypadButton onClick={() => handleKeypadPress('⌫')} isAction>
+        <KeypadButton onClick={() => handleKeypadPress('⌫')} $isAction>
           ⌫
         </KeypadButton>
       </KeypadContainer>

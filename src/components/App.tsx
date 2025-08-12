@@ -17,15 +17,15 @@ const AppContainer = styled.div`
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 `;
 
-const StatusBar = styled.div<{ isOnline: boolean; isTrainingMode: boolean }>`
+const StatusBar = styled.div<{ $isOnline: boolean; $isTrainingMode: boolean }>`
   height: 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
   background-color: ${props => 
-    props.isTrainingMode ? '#ff9800' : 
-    props.isOnline ? '#4caf50' : '#f44336'};
+    props.$isTrainingMode ? '#ff9800' : 
+    props.$isOnline ? '#4caf50' : '#f44336'};
   color: white;
   font-size: 12px;
   font-weight: 500;
@@ -149,7 +149,7 @@ export const App: React.FC = () => {
   return (
     <NotificationProvider>
       <AppContainer>
-        <StatusBar isOnline={appState.isOnline} isTrainingMode={appState.isTrainingMode}>
+        <StatusBar $isOnline={appState.isOnline} $isTrainingMode={appState.isTrainingMode}>
           <StatusItem>
             <span>●</span>
             {appState.isTrainingMode ? 'TRAINING MODE' : 

@@ -266,9 +266,27 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
       setIsLoading(true);
       try {
-        const response = await itemService.searchItems(searchTerm.trim());
-        if (response.success && response.results) {
-          const items = response.results.map(result => result.item);
+        const response = await itemService.searchProducts(searchTerm.trim(), {
+          maxResults: 20,
+          storeNumber: 1000
+        });
+        if (response.success && response.items) {
+          console.log(`🔍 Search results for "${searchTerm}":`, response.items);
+          // Convert search results to Item format
+          const items: Item[] = response.items.map(searchItem => ({
+            identifier: searchItem.identifier || {},
+            itemText: searchItem.itemText || '',
+            modelNo: searchItem.modelNo || '',
+            color: searchItem.colorText ? { text: searchItem.colorText } : undefined,
+            size: searchItem.sizeText ? { text: searchItem.sizeText } : undefined,
+            itemStatus: 'Active',
+            status: { isDeactivated: false, isDeleted: false },
+            unit: 'Stk',
+            canBeOrdered: true,
+            minOrderQty: 1,
+            trackStockChangesForItem: true,
+            openPrice: false
+          }));
           setSearchResults(items);
         } else {
           setSearchResults([]);

@@ -93,13 +93,13 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'success' | '
   }
 `;
 
-const StatusIndicator = styled.div<{ status: 'success' | 'error' | 'warning' | 'info' }>`
+const StatusIndicator = styled.div<{ $status: 'success' | 'error' | 'warning' | 'info' }>`
   padding: 10px;
   margin: 10px 0;
   border-radius: 4px;
   
-  ${({ status }) => {
-    switch (status) {
+  ${({ $status }) => {
+    switch ($status) {
       case 'success':
         return 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
       case 'error':
@@ -576,7 +576,7 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
 
       {statusMessage && (
         <StatusIndicator 
-          status={
+          $status={
             connectionStatus === 'success' ? 'success' :
             connectionStatus === 'error' ? 'error' :
             connectionStatus === 'testing' ? 'info' : 'info'
@@ -677,7 +677,7 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
 
       {itemStatusMessage && (
         <StatusIndicator 
-          status={
+          $status={
             itemConnectionStatus === 'success' ? 'success' :
             itemConnectionStatus === 'error' ? 'error' :
             itemConnectionStatus === 'testing' ? 'info' : 'info'
