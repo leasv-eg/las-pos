@@ -270,8 +270,10 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
           maxResults: 20,
           storeNumber: 1000
         });
+        console.log(`🔍 SearchModule: Raw response for "${searchTerm}":`, response);
+        
         if (response.success && response.items) {
-          console.log(`🔍 Search results for "${searchTerm}":`, response.items);
+          console.log(`🔍 SearchModule: Processing ${response.items.length} items`);
           // Convert search results to Item format
           const items: Item[] = response.items.map(searchItem => ({
             identifier: searchItem.identifier || {},
@@ -287,8 +289,10 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
             trackStockChangesForItem: true,
             openPrice: false
           }));
+          console.log(`🔍 SearchModule: Converted to ${items.length} Item objects:`, items);
           setSearchResults(items);
         } else {
+          console.log(`🔍 SearchModule: No results - success: ${response.success}, items: ${response.items?.length || 0}`);
           setSearchResults([]);
           if (response.error) {
             showError('Search Error', response.error);
@@ -426,23 +430,33 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
       />
       
       <SearchResults size={size}>
-        {isLoading ? (
-          <StateMessage size={size}>
-            {size === 'micro' ? '...' : 'Searching...'}
-          </StateMessage>
-        ) : searchTerm && searchResults.length === 0 ? (
-          <StateMessage size={size}>
-            {size === 'micro' ? 'None' : 'No products found'}
-          </StateMessage>
-        ) : searchResults.length === 0 ? (
-          <StateMessage size={size}>
-            {size === 'micro' ? 'Search' : 
-             size === 'small' ? 'Start typing to search' :
-             'Start typing to search for products'}
-          </StateMessage>
-        ) : (
-          searchResults.map((product, index) => renderProductCard(product, index))
-        )}
+        {(() => {
+          console.log(`🔍 SearchModule Render: searchTerm="${searchTerm}", results=${searchResults.length}, loading=${isLoading}`);
+          if (isLoading) {
+            return (
+              <StateMessage size={size}>
+                {size === 'micro' ? '...' : 'Searching...'}
+              </StateMessage>
+            );
+          } else if (searchTerm && searchResults.length === 0) {
+            return (
+              <StateMessage size={size}>
+                {size === 'micro' ? 'None' : 'No products found'}
+              </StateMessage>
+            );
+          } else if (searchResults.length === 0) {
+            return (
+              <StateMessage size={size}>
+                {size === 'micro' ? 'Search' : 
+                 size === 'small' ? 'Start typing to search' :
+                 'Start typing to search for products'}
+              </StateMessage>
+            );
+          } else {
+            console.log(`🔍 SearchModule Render: Rendering ${searchResults.length} results`);
+            return searchResults.map((product, index) => renderProductCard(product, index));
+          }
+        })()}
       </SearchResults>
     </ModuleContainer>
   );
