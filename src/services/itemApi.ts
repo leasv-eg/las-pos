@@ -399,10 +399,19 @@ class ItemServiceAPI {
       params.append('storeNumber', options.storeNumber.toString());
     }
 
+    // Try using the same endpoint as advancedSearch since GET endpoint is failing
+    const searchBody = {
+      fullTextQuery: query.trim(),
+      top: options.top || 50,
+      skip: options.skip,
+      storeNo: options.storeNumber
+    };
+
     const result = await this.makeRequest<SearchItemsWithDetails>(
-      `/gateway/ItemSearch/items?${params.toString()}`,
+      `/gateway/Search/items`,
       {
-        method: 'GET'
+        method: 'POST',
+        body: JSON.stringify(searchBody)
       }
     );
 
