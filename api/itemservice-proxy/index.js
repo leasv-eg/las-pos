@@ -51,26 +51,30 @@ module.exports = async function (context, req) {
         }
 
         // Handle authorization headers (both standard and custom)
+        // Note: Azure Functions normalizes headers to lowercase
         const customAuthHeader = req.headers['x-item-authorization'];
-        const standardAuthHeader = req.headers.authorization || req.headers.Authorization;
+        const standardAuthHeader = req.headers['authorization'];
+        
+        context.log(`[Item Service Proxy] Debug headers check:`);
+        context.log(`[Item Service Proxy] - x-item-authorization: ${customAuthHeader ? 'YES (length: ' + customAuthHeader.length + ')' : 'NO'}`);
+        context.log(`[Item Service Proxy] - authorization: ${standardAuthHeader ? 'YES (length: ' + standardAuthHeader.length + ')' : 'NO'}`);
         
         if (customAuthHeader) {
             // Client sent custom header to bypass Azure auth injection
             forwardHeaders['Authorization'] = customAuthHeader;
-            context.log(`[Item Service Proxy] Found CUSTOM authorization header: ${customAuthHeader.substring(0, 20)}...`);
-            context.log(`[Item Service Proxy] Custom header length: ${customAuthHeader.length}`);
+            context.log(`[Item Service Proxy] Using CUSTOM authorization header: ${customAuthHeader.substring(0, 20)}...`);
         } else if (standardAuthHeader) {
             // Fallback to standard header (development mode)
             forwardHeaders['Authorization'] = standardAuthHeader;
-            context.log(`[Item Service Proxy] Found standard authorization header: ${standardAuthHeader.substring(0, 20)}...`);
-            context.log(`[Item Service Proxy] Standard header length: ${standardAuthHeader.length}`);
+            context.log(`[Item Service Proxy] Using standard authorization header: ${standardAuthHeader.substring(0, 20)}...`);
         } else {
             context.log(`[Item Service Proxy] No authorization header found in request`);
             context.log(`[Item Service Proxy] Available headers:`, Object.keys(req.headers));
         }
 
         context.log(`[Item Service Proxy] Final forwarded headers:`, forwardHeaders);
-
+        context.log(`[Item Service Proxy] Final Authorization header length: ${forwardHeaders.Authorization ? forwardHeaders.Authorization.length : 'NONE'}`);
+        
         // Use native https module to avoid Azure Functions auth injection
         const targetURL = new URL(targetUrl);
         const requestBody = req.method !== 'GET' && req.body ? JSON.stringify(req.body) : null;
