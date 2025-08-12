@@ -1,0 +1,623 @@
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+import { posApiService } from '../services/posApi';
+import { itemService } from '../services/itemService';
+import { POSEnvironment } from '../types/posApiTypes';
+
+const ConfigContainer = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+  max-width: 600px;
+`;
+
+const ConfigSection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const Label = styled.label`
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+  margin-bottom: 10px;
+  min-height: 100px;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'success' | 'danger' }>`
+  padding: 10px 20px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  
+  ${({ variant = 'primary' }) => {
+    switch (variant) {
+      case 'primary':
+        return 'background: #007bff; color: white;';
+      case 'secondary':
+        return 'background: #6c757d; color: white;';
+      case 'success':
+        return 'background: #28a745; color: white;';
+      case 'danger':
+        return 'background: #dc3545; color: white;';
+    }
+  }}
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const StatusIndicator = styled.div<{ status: 'success' | 'error' | 'warning' | 'info' }>`
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+  font-size: 14px;
+
+  ${({ status }) => {
+    switch (status) {
+      case 'success':
+        return 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+      case 'error':
+        return 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;';
+      case 'warning':
+        return 'background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;';
+      case 'info':
+        return 'background: #d1ecf1; color: #0c5460; border: 1px solid #b8daff;';
+    }
+  }}
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  background: white;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const ConfigGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+interface POSConfigProps {
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
+  // POS API Configuration
+  const [bearerToken, setBearerToken] = useState('');
+  const [apiKey, setApiKey] = useState('mobile');
+  const [storeNum, setStoreNum] = useState(1000);
+  const [environment, setEnvironment] = useState<POSEnvironment>('test');
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error' | 'info'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [config, setConfig] = useState(posApiService.getConfig());
+
+  // Item Service Configuration
+  const [itemBearerToken, setItemBearerToken] = useState('');
+  const [itemEnvironment, setItemEnvironment] = useState<POSEnvironment>('test');
+  const [itemConnectionStatus, setItemConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error' | 'info'>('idle');
+  const [itemStatusMessage, setItemStatusMessage] = useState('');
+  const [cacheStats, setCacheStats] = useState<{ totalItems: number } | null>(null);
+
+  useEffect(() => {
+    // Load saved POS API configuration
+    const savedToken = localStorage.getItem('pos_bearer_token');
+    const savedApiKey = localStorage.getItem('pos_api_key');
+    const savedStoreNum = localStorage.getItem('pos_store_num');
+    const savedEnvironment = localStorage.getItem('pos_environment') as POSEnvironment;
+
+    if (savedToken) setBearerToken(savedToken);
+    if (savedApiKey) setApiKey(savedApiKey);
+    if (savedStoreNum) setStoreNum(parseInt(savedStoreNum));
+    if (savedEnvironment) setEnvironment(savedEnvironment);
+
+    // Load saved Item Service configuration
+    const savedItemToken = localStorage.getItem('item_bearer_token');
+    const savedItemEnvironment = localStorage.getItem('item_environment') as POSEnvironment;
+
+    if (savedItemToken) setItemBearerToken(savedItemToken);
+    if (savedItemEnvironment) setItemEnvironment(savedItemEnvironment);
+
+    updateConfig();
+    updateCacheStats();
+  }, []);
+
+  const updateConfig = () => {
+    setConfig(posApiService.getConfig());
+  };
+
+  const updateCacheStats = async () => {
+    try {
+      const stats = await itemService.getCacheStats();
+      setCacheStats(stats);
+    } catch (error) {
+      console.error('Failed to get cache stats:', error);
+    }
+  };
+
+  const saveConfiguration = () => {
+    // Save to service
+    posApiService.setBearerToken(bearerToken);
+    posApiService.setApiKey(apiKey);
+    posApiService.setStoreNumber(storeNum);
+    posApiService.setEnvironment(environment);
+
+    // Save to localStorage
+    localStorage.setItem('pos_bearer_token', bearerToken);
+    localStorage.setItem('pos_api_key', apiKey);
+    localStorage.setItem('pos_store_num', storeNum.toString());
+    localStorage.setItem('pos_environment', environment);
+
+    updateConfig();
+    setStatusMessage('Configuration saved successfully');
+    setConnectionStatus('success');
+  };
+
+  const testConnection = async () => {
+    setConnectionStatus('testing');
+    setStatusMessage('Testing connection...');
+
+    // Save current settings first
+    posApiService.setBearerToken(bearerToken);
+    posApiService.setApiKey(apiKey);
+    posApiService.setStoreNumber(storeNum);
+    posApiService.setEnvironment(environment);
+
+    try {
+      const result = await posApiService.testConnection();
+      
+      if (result.success) {
+        setConnectionStatus('success');
+        setStatusMessage(`✅ Connection successful! API is working on ${environment} environment.`);
+      } else {
+        setConnectionStatus('error');
+        setStatusMessage(`❌ Connection failed: ${result.message}`);
+      }
+    } catch (error) {
+      setConnectionStatus('error');
+      setStatusMessage(`💥 Test error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    updateConfig();
+  };
+
+  const createTestCart = async () => {
+    if (!bearerToken) {
+      setStatusMessage('❌ Please set a bearer token first');
+      setConnectionStatus('error');
+      return;
+    }
+
+    setConnectionStatus('testing');
+    setStatusMessage('Creating test cart...');
+
+    try {
+      const result = await posApiService.createCartWithItems([
+        { ean: '5711724072697', quantity: 1 }
+      ]);
+
+      if (result.success) {
+        console.log('🎉 Test cart result:', result);
+        console.log('🛒 Cart object:', result.cart);
+        
+        // Extract cart ID from the actual API response structure
+        let cartId = 'Unknown';
+        if (result.cart?.cartId?.id) {
+          cartId = result.cart.cartId.id;
+        } else if (result.cart?.id?.id) {
+          // Fallback for different response structure
+          cartId = result.cart.id.id;
+        }
+        
+        setConnectionStatus('success');
+        setStatusMessage(`✅ Test cart created! Cart ID: ${cartId}`);
+      } else {
+        setConnectionStatus('error');
+        setStatusMessage(`❌ Failed to create cart: ${result.error}`);
+      }
+    } catch (error) {
+      setConnectionStatus('error');
+      setStatusMessage(`💥 Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  updateConfig();
+  };
+
+  // Item Service Functions
+  const saveItemConfiguration = async () => {
+    try {
+      // Initialize and configure Item Service
+      await itemService.init();
+      itemService.configure(itemBearerToken, itemEnvironment);
+
+      // Save to localStorage
+      localStorage.setItem('item_bearer_token', itemBearerToken);
+      localStorage.setItem('item_environment', itemEnvironment);
+
+      setItemStatusMessage('Item Service configuration saved successfully');
+      setItemConnectionStatus('success');
+      updateCacheStats();
+    } catch (error) {
+      setItemStatusMessage(`Failed to save Item Service configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setItemConnectionStatus('error');
+    }
+  };
+
+  const testItemConnection = async () => {
+    setItemConnectionStatus('testing');
+    setItemStatusMessage('Testing Item Service connection...');
+
+    try {
+      // Initialize and configure Item Service
+      await itemService.init();
+      itemService.configure(itemBearerToken, itemEnvironment);
+
+      const result = await itemService.testService();
+      
+      if (result.success) {
+        setItemConnectionStatus('success');
+        setItemStatusMessage(
+          `✅ Item Service working! API: ${result.apiTest?.message || 'OK'}, Cache: ${result.cacheTest?.message || 'OK'}`
+        );
+      } else {
+        setItemConnectionStatus('error');
+        setItemStatusMessage(`❌ Item Service test failed: ${result.error}`);
+      }
+      
+      updateCacheStats();
+    } catch (error) {
+      setItemConnectionStatus('error');
+      setItemStatusMessage(`💥 Item Service test error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const testItemLookup = async () => {
+    if (!itemBearerToken) {
+      setItemStatusMessage('❌ Please set an Item Service bearer token first');
+      setItemConnectionStatus('error');
+      return;
+    }
+
+    setItemConnectionStatus('testing');
+    setItemStatusMessage('Testing item lookup...');
+
+    try {
+      await itemService.init();
+      itemService.configure(itemBearerToken, itemEnvironment);
+
+      // Test with a sample GTIN
+      const result = await itemService.getItem(
+        { gtin: '5711724072697' }, // Same GTIN used in POS test
+        { storeNumber: storeNum, includeCache: true }
+      );
+
+      if (result.success && result.result) {
+        const { item, prices, source } = result.result;
+        setItemConnectionStatus('success');
+        setItemStatusMessage(
+          `✅ Item found! "${item.itemText || 'Unknown'}" (Source: ${source}, ${prices?.length || 0} prices)`
+        );
+      } else {
+        setItemConnectionStatus('error');
+        setItemStatusMessage(`❌ Item lookup failed: ${result.error || 'Unknown error'}`);
+      }
+      
+      updateCacheStats();
+    } catch (error) {
+      setItemConnectionStatus('error');
+      setItemStatusMessage(`💥 Item lookup error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const clearItemCache = async () => {
+    try {
+      await itemService.clearCache();
+      setItemStatusMessage('✅ Item cache cleared successfully');
+      setItemConnectionStatus('success');
+      updateCacheStats();
+    } catch (error) {
+      setItemStatusMessage(`❌ Failed to clear cache: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setItemConnectionStatus('error');
+    }
+  };
+
+  const clearConfiguration = () => {
+    setBearerToken('');
+    setApiKey('mobile');
+    setStoreNum(1000);
+    setEnvironment('test');
+    localStorage.removeItem('pos_bearer_token');
+    localStorage.removeItem('pos_api_key');
+    localStorage.removeItem('pos_store_num');
+    localStorage.removeItem('pos_environment');
+    
+    posApiService.setBearerToken('');
+    posApiService.setApiKey('mobile');
+    posApiService.setStoreNumber(1000);
+    posApiService.setEnvironment('test');
+    
+    updateConfig();
+    setStatusMessage('Configuration cleared');
+    setConnectionStatus('info');
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <ConfigContainer>
+      <h2>🔧 POS API Configuration</h2>
+      
+      <ConfigSection>
+        <h3>Current Status</h3>
+        <div>
+          <strong>Token Status:</strong> {config.hasToken ? '✅ Set' : '❌ Not set'}<br/>
+          <strong>Store Number:</strong> {config.storeNum}<br/>
+          <strong>API Key:</strong> {config.apiKey}
+        </div>
+      </ConfigSection>
+
+      <ConfigGrid>
+        <ConfigSection>
+          <Label htmlFor="apiKey">API Key</Label>
+          <Input
+            id="apiKey"
+            type="text"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="mobile"
+          />
+        </ConfigSection>
+
+        <ConfigSection>
+          <Label htmlFor="storeNum">Store Number</Label>
+          <Input
+            id="storeNum"
+            type="number"
+            value={storeNum}
+            onChange={(e) => setStoreNum(parseInt(e.target.value) || 1000)}
+            placeholder="1000"
+          />
+        </ConfigSection>
+      </ConfigGrid>
+
+      <ConfigSection>
+        <Label htmlFor="environment">Environment</Label>
+        <Select 
+          id="environment" 
+          value={environment} 
+          onChange={(e) => setEnvironment(e.target.value as POSEnvironment)}
+        >
+          <option value="dev">Development (via proxy → posapi.egretail-dev.cloud/api)</option>
+          <option value="test">Test (via proxy → posapi.egretail-test.cloud/api)</option>
+          <option value="prod">Production (via proxy → posapi.egretail.cloud/api)</option>
+        </Select>
+        <small style={{ color: '#666', fontSize: '12px' }}>
+          ✅ Using development proxy to bypass CORS restrictions when running on localhost.
+        </small>
+      </ConfigSection>
+
+      <ConfigSection>
+        <Label htmlFor="bearerToken">Bearer Token</Label>
+        <TextArea
+          id="bearerToken"
+          value={bearerToken}
+          onChange={(e) => setBearerToken(e.target.value)}
+          placeholder="Paste your bearer token here..."
+        />
+        <small style={{ color: '#666' }}>
+          This token will expire and need to be replaced periodically. 
+          The app will work with demo data when no token is set.
+        </small>
+      </ConfigSection>
+
+      {statusMessage && (
+        <StatusIndicator 
+          status={
+            connectionStatus === 'success' ? 'success' :
+            connectionStatus === 'error' ? 'error' :
+            connectionStatus === 'testing' ? 'info' : 'info'
+          }
+        >
+          <div>
+            <strong>Environment:</strong> {environment.toUpperCase()}
+            <br />
+            {statusMessage}
+          </div>
+        </StatusIndicator>
+      )}
+
+      <ConfigSection>
+        <Button 
+          variant="primary" 
+          onClick={saveConfiguration}
+        >
+          💾 Save Configuration
+        </Button>
+
+        <Button 
+          variant="secondary" 
+          onClick={testConnection}
+          disabled={connectionStatus === 'testing'}
+        >
+          🔄 Test Connection
+        </Button>
+
+        <Button 
+          variant="success" 
+          onClick={createTestCart}
+          disabled={connectionStatus === 'testing' || !bearerToken}
+        >
+          🛒 Create Test Cart
+        </Button>
+
+        <Button 
+          variant="danger" 
+          onClick={clearConfiguration}
+        >
+          🗑️ Clear All
+        </Button>
+      </ConfigSection>
+
+      <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #eee' }} />
+
+      {/* Item Service Configuration */}
+      <h2>📦 Item Service Configuration</h2>
+      
+      <ConfigSection>
+        <h3>Item Service Status</h3>
+        <div>
+          <strong>Token Status:</strong> {itemBearerToken ? '✅ Set' : '❌ Not set'}<br/>
+          <strong>Environment:</strong> {itemEnvironment}<br/>
+          <strong>Service Status:</strong> {itemService.getStatus().ready ? '✅ Ready' : '❌ Not Ready'}<br/>
+          {cacheStats && (
+            <>
+              <strong>Cache:</strong> {cacheStats.totalItems} items cached<br/>
+            </>
+          )}
+        </div>
+      </ConfigSection>
+
+      <ConfigSection>
+        <Label htmlFor="itemEnvironment">Item Service Environment</Label>
+        <Select 
+          id="itemEnvironment" 
+          value={itemEnvironment} 
+          onChange={(e) => setItemEnvironment(e.target.value as POSEnvironment)}
+        >
+          <option value="dev">Development (via proxy → itemservice-dev.egretail.cloud/api)</option>
+          <option value="test">Test (via proxy → itemservice-test.egretail.cloud/api)</option>
+          <option value="prod">Production (via proxy → itemservice.egretail.cloud/api)</option>
+        </Select>
+      </ConfigSection>
+
+      <ConfigSection>
+        <Label htmlFor="itemBearerToken">Item Service Bearer Token</Label>
+        <TextArea
+          id="itemBearerToken"
+          value={itemBearerToken}
+          onChange={(e) => setItemBearerToken(e.target.value)}
+          placeholder="Paste your Item Service bearer token here..."
+        />
+        <small style={{ color: '#666' }}>
+          This token is used to access the EG Retail Item Gateway API for product information and pricing.
+        </small>
+      </ConfigSection>
+
+      {itemStatusMessage && (
+        <StatusIndicator 
+          status={
+            itemConnectionStatus === 'success' ? 'success' :
+            itemConnectionStatus === 'error' ? 'error' :
+            itemConnectionStatus === 'testing' ? 'info' : 'info'
+          }
+        >
+          <div>
+            <strong>Item Service:</strong> {itemEnvironment.toUpperCase()}
+            <br />
+            {itemStatusMessage}
+          </div>
+        </StatusIndicator>
+      )}
+
+      <ConfigSection>
+        <Button 
+          variant="primary" 
+          onClick={saveItemConfiguration}
+        >
+          💾 Save Item Config
+        </Button>
+
+        <Button 
+          variant="secondary" 
+          onClick={testItemConnection}
+          disabled={itemConnectionStatus === 'testing'}
+        >
+          🔄 Test Item Service
+        </Button>
+
+        <Button 
+          variant="success" 
+          onClick={testItemLookup}
+          disabled={itemConnectionStatus === 'testing' || !itemBearerToken}
+        >
+          🔍 Test Item Lookup
+        </Button>
+
+        <Button 
+          variant="warning" 
+          onClick={clearItemCache}
+        >
+          🗑️ Clear Cache
+        </Button>
+      </ConfigSection>
+
+      <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #eee' }} />
+
+      <ConfigSection>
+        <Button 
+          variant="secondary" 
+          onClick={onClose}
+        >
+          ❌ Close
+        </Button>
+      </ConfigSection>
+    </ConfigContainer>
+  );
+};

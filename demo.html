@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAS POS - Development</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-bar {
+            height: 32px;
+            background: #4caf50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 48px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            color: #1976d2;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin: 0 0 32px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .login-button:hover {
+            background: #1565c0;
+        }
+        
+        .error-message {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 16px;
+            padding: 12px;
+            background: #ffebee;
+            border-radius: 4px;
+            border-left: 4px solid #f44336;
+        }
+        
+        .quick-login {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .quick-login-title {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 16px 0;
+            font-weight: 500;
+        }
+        
+        .quick-login-button {
+            width: 100%;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .quick-login-button:hover {
+            background: #eeeeee;
+        }
+        
+        .sales-interface {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 1px;
+            background-color: #e0e0e0;
+        }
+        
+        .panel {
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            flex: 0 0 300px;
+            min-width: 300px;
+        }
+        
+        .center-panel {
+            flex: 1;
+            min-width: 400px;
+        }
+        
+        .right-panel {
+            flex: 0 0 320px;
+            min-width: 320px;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .action-button {
+            padding: 8px 16px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .action-button:hover {
+            background: #1565c0;
+        }
+        
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #999;
+            text-align: center;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .training-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #856404;
+            text-align: center;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 16px;
+            color: #155724;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        function LoginScreen({ onLogin }) {
+            const [userNumber, setUserNumber] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                if (!userNumber || !password) {
+                    setError('Please enter both user number and password');
+                    return;
+                }
+                
+                if (userNumber === '1' && password === '111') {
+                    setError('');
+                    setSuccess('Login successful! Loading application...');
+                    setTimeout(() => {
+                        onLogin({
+                            id: '1',
+                            userNumber: '1',
+                            firstName: 'Demo',
+                            lastName: 'Cashier',
+                            role: 'CASHIER'
+                        });
+                    }, 1000);
+                } else {
+                    setError('Invalid credentials. Use User: 1, Password: 111');
+                }
+            };
+            
+            const handleQuickLogin = () => {
+                setUserNumber('1');
+                setPassword('111');
+                setError('');
+                setSuccess('');
+            };
+            
+            return (
+                <div className="login-container">
+                    <div className="login-card">
+                        <h1 className="logo">LAS POS</h1>
+                        <p className="subtitle">Point of Sale System</p>
+                        
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="label" htmlFor="userNumber">User Number</label>
+                                <input
+                                    id="userNumber"
+                                    type="text"
+                                    className="input"
+                                    value={userNumber}
+                                    onChange={(e) => setUserNumber(e.target.value)}
+                                    placeholder="Enter your user number"
+                                    autoFocus
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="label" htmlFor="password">Password</label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    className="input"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                />
+                            </div>
+                            
+                            <button type="submit" className="login-button">
+                                Sign In
+                            </button>
+                        </form>
+                        
+                        {error && <div className="error-message">{error}</div>}
+                        {success && <div className="success-message">{success}</div>}
+                        
+                        <div className="quick-login">
+                            <h3 className="quick-login-title">Development Quick Login</h3>
+                            <button type="button" className="quick-login-button" onClick={handleQuickLogin}>
+                                Use Demo Credentials (User: 1, Password: 111)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function SalesInterface({ user, onLogout }) {
+            const [isTrainingMode, setIsTrainingMode] = useState(true);
+            const [basket, setBasket] = useState([]);
+            const [total, setTotal] = useState(0);
+            
+            const addProduct = (sku) => {
+                const products = {
+                    'SHI-001': { name: 'Classic White Shirt', price: 79.99 },
+                    'TRO-001': { name: 'Navy Blue Trousers', price: 129.99 },
+                    'JAC-001': { name: 'Leather Jacket', price: 299.99 },
+                    'SHO-001': { name: 'Oxford Shoes', price: 159.99 },
+                    'ACC-001': { name: 'Leather Belt', price: 45.99 }
+                };
+                
+                const product = products[sku];
+                if (product) {
+                    const newItem = {
+                        id: Date.now(),
+                        sku,
+                        name: product.name,
+                        price: product.price,
+                        quantity: 1
+                    };
+                    setBasket([...basket, newItem]);
+                    setTotal(total + product.price);
+                } else {
+                    alert(`Product with SKU "${sku}" not found. Try: SHI-001, TRO-001, JAC-001, SHO-001, ACC-001`);
+                }
+            };
+            
+            const completeSale = () => {
+                if (basket.length === 0) {
+                    alert('Cannot complete sale with empty basket');
+                    return;
+                }
+                
+                alert(`${isTrainingMode ? 'Training' : ''} Transaction completed!\nTotal: $${total.toFixed(2)}\nItems: ${basket.length}`);
+                setBasket([]);
+                setTotal(0);
+            };
+            
+            return (
+                <div className="sales-interface">
+                    <div className="panel left-panel">
+                        <div className="panel-header">
+                            <h2 className="panel-title">Basket</h2>
+                            <button
+                                className="action-button"
+                                onClick={completeSale}
+                                disabled={basket.length === 0}
+                            >
+                                Pay ${total.toFixed(2)}
+                            </button>
+                        </div>
+                        <div className="panel-content">
+                            {isTrainingMode && (
+                                <div className="training-notice">
+                                    🎓 Training Mode Active - No real transactions
+                                </div>
+                            )}
+                            
+                            {basket.length === 0 ? (
+                                <div className="empty-state">
+                                    <div className="empty-icon">🛒</div>
+                                    <div>Basket is empty</div>
+                                    <div style={{fontSize: '14px', marginTop: '8px', opacity: 0.7}}>
+                                        Add products to start a sale
+                                    </div>
+                                </div>
+                            ) : (
+                                <div>
+                                    {basket.map(item => (
+                                        <div key={item.id} style={{
+                                            padding: '12px 0',
+                                            borderBottom: '1px solid #f0f0f0',
+                                            display: 'flex',
+                                            justifyContent: 'space-between'
+                                        }}>
+                                            <div>
+                                                <div style={{fontWeight: '500'}}>{item.name}</div>
+                                                <div style={{fontSize: '12px', color: '#666'}}>{item.sku}</div>
+                                            </div>
+                                            <div style={{textAlign: 'right'}}>
+                                                <div>${item.price.toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div style={{
+                                        marginTop: '16px',
+                                        padding: '16px',
+                                        background: '#f8f9fa',
+                                        borderRadius: '8px'
+                                    }}>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                            <span>Subtotal ({basket.length} items)</span>
+                                            <span>${total.toFixed(2)}</span>
+                                        </div>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                            <span>Tax (25%)</span>
+                                            <span>${(total * 0.25).toFixed(2)}</span>
+                                        </div>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: '16px'}}>
+                                            <span>Total</span>
+                                            <span>${(total * 1.25).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="panel center-panel">
+                        <div className="panel-header">
+                            <h2 className="panel-title">Keypad</h2>
+                        </div>
+                        <div className="panel-content">
+                            <div style={{marginBottom: '20px'}}>
+                                <div style={{
+                                    background: '#f8f9fa',
+                                    border: '2px solid #e0e0e0',
+                                    borderRadius: '8px',
+                                    padding: '16px',
+                                    minHeight: '60px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    fontSize: '18px'
+                                }}>
+                                    Enter SKU (try: SHI-001, TRO-001, JAC-001)
+                                </div>
+                            </div>
+                            
+                            <div style={{marginBottom: '20px'}}>
+                                <input
+                                    type="text"
+                                    placeholder="Enter product SKU"
+                                    className="input"
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            addProduct(e.target.value.toUpperCase());
+                                            e.target.value = '';
+                                        }
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
+                            
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px'}}>
+                                {['SHI-001', 'TRO-001', 'JAC-001', 'SHO-001', 'ACC-001'].map(sku => (
+                                    <button
+                                        key={sku}
+                                        className="action-button"
+                                        onClick={() => addProduct(sku)}
+                                        style={{padding: '16px', fontSize: '14px'}}
+                                    >
+                                        Add {sku}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="panel right-panel">
+                        <div className="panel-header">
+                            <h2 className="panel-title">Insight Engine</h2>
+                            <button
+                                className="action-button"
+                                onClick={() => setIsTrainingMode(!isTrainingMode)}
+                            >
+                                {isTrainingMode ? 'Exit Training' : 'Training Mode'}
+                            </button>
+                        </div>
+                        <div className="panel-content">
+                            {isTrainingMode ? (
+                                <div style={{
+                                    background: '#e3f2fd',
+                                    border: '1px solid #bbdefb',
+                                    borderRadius: '8px',
+                                    padding: '16px',
+                                    marginBottom: '16px'
+                                }}>
+                                    <div style={{fontWeight: '600', color: '#1976d2', marginBottom: '8px'}}>
+                                        🎓 Training Mode Tips
+                                    </div>
+                                    <div style={{fontSize: '14px', color: '#333', lineHeight: '1.5'}}>
+                                        This panel shows context-aware information:
+                                        <br />• Product details when items are added
+                                        <br />• Customer info when selected
+                                        <br />• Promotion alerts and recommendations
+                                        <br />• Real-time upsell suggestions
+                                    </div>
+                                </div>
+                            ) : null}
+                            
+                            <div className="empty-state">
+                                <div className="empty-icon">💡</div>
+                                <div>Smart insights will appear here</div>
+                                <div style={{fontSize: '14px', marginTop: '8px', opacity: 0.7}}>
+                                    Add products to see recommendations
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function App() {
+            const [user, setUser] = useState(null);
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+            
+            useEffect(() => {
+                const handleOnline = () => setIsOnline(true);
+                const handleOffline = () => setIsOnline(false);
+                
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
+            
+            const handleLogin = (userData) => {
+                setUser(userData);
+            };
+            
+            const handleLogout = () => {
+                setUser(null);
+            };
+            
+            return (
+                <div className="app-container">
+                    <div className="status-bar">
+                        <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                            <span>●</span>
+                            {isOnline ? 'ONLINE' : 'OFFLINE'}
+                        </span>
+                        
+                        {user && (
+                            <span>
+                                Oslo Downtown Store - Register 1 | {user.firstName} {user.lastName} ({user.userNumber})
+                            </span>
+                        )}
+                    </div>
+                    
+                    <div className="main-content">
+                        {!user ? (
+                            <LoginScreen onLogin={handleLogin} />
+                        ) : (
+                            <SalesInterface user={user} onLogout={handleLogout} />
+                        )}
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

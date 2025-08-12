@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAS POS Debug Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #c8e6c9; color: #2e7d32; }
+        .error { background: #ffcdd2; color: #c62828; }
+        .warning { background: #fff3e0; color: #f57c00; }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h1>🔧 LAS POS Debug Helper</h1>
+        <p>This page will help us diagnose why your LAS POS app shows a blank page.</p>
+        
+        <div class="test-buttons">
+            <button onclick="testMainApp()">Test Main App</button>
+            <button onclick="testReact()">Test React</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <button onclick="openApp()">Open LAS POS</button>
+        </div>
+        
+        <div id="status"></div>
+        <div class="console-output" id="console"></div>
+        
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Open LAS POS" to open the main app in a new tab</li>
+            <li>Press F12 or right-click and select "Inspect Element"</li>
+            <li>Click on the "Console" tab</li>
+            <li>Look for colored emoji messages like 🚀, 🔥, 🔐</li>
+            <li>Report back what you see!</li>
+        </ol>
+        
+        <h3>What you should see in console:</h3>
+        <ul>
+            <li>🚀 LAS POS - Starting application...</li>
+            <li>📍 Root element: [object HTMLDivElement]</li>
+            <li>🎯 LAS POS - Creating React root...</li>
+            <li>✅ Root element found, rendering App...</li>
+            <li>🔥 App component rendering...</li>
+            <li>🔐 LoginScreen component rendering...</li>
+            <li>🎉 LAS POS - App rendered successfully!</li>
+        </ul>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleDiv = document.getElementById('console');
+        const statusDiv = document.getElementById('status');
+        
+        function addToConsole(message, type = 'log') {
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? '#ff6b6b' : '#00ff00';
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole('ERROR: ' + args.join(' '), 'error');
+        };
+        
+        function testMainApp() {
+            addToConsole('Testing connection to main app...');
+            fetch('http://localhost:3000/index.html')
+                .then(response => {
+                    if (response.ok) {
+                        statusDiv.innerHTML = '<div class="status success">✅ Main app server is running!</div>';
+                        addToConsole('Main app server responded with status: ' + response.status);
+                    } else {
+                        statusDiv.innerHTML = '<div class="status error">❌ Main app server error: ' + response.status + '</div>';
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = '<div class="status error">❌ Cannot connect to main app: ' + error.message + '</div>';
+                    addToConsole('Connection error: ' + error.message);
+                });
+        }
+        
+        function testReact() {
+            addToConsole('Testing if React can load...');
+            try {
+                // Simple React test
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = '<div>React test successful!</div>';
+                statusDiv.innerHTML = '<div class="status success">✅ Basic JavaScript working</div>';
+                addToConsole('JavaScript execution is working');
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ JavaScript error: ' + error.message + '</div>';
+                addToConsole('JavaScript error: ' + error.message);
+            }
+        }
+        
+        function clearLogs() {
+            consoleDiv.innerHTML = '';
+        }
+        
+        function openApp() {
+            window.open('http://localhost:3000/index.html', '_blank');
+            addToConsole('Opened main app in new tab - check browser console!');
+        }
+        
+        // Auto-test on load
+        setTimeout(() => {
+            testMainApp();
+            testReact();
+        }, 1000);
+    </script>
+</body>
+</html>
