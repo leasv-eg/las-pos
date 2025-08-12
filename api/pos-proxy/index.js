@@ -51,8 +51,10 @@ module.exports = async function (context, req) {
         if (authHeader) {
             forwardHeaders['Authorization'] = authHeader;
             context.log(`[POS Proxy] Found authorization header: ${authHeader.substring(0, 20)}...`);
+            context.log(`[POS Proxy] Full header length: ${authHeader.length}`);
         } else {
             context.log(`[POS Proxy] No authorization header found in request`);
+            context.log(`[POS Proxy] Available headers:`, Object.keys(req.headers));
         }
 
         // Forward the request to the POS API
@@ -67,9 +69,17 @@ module.exports = async function (context, req) {
         context.log(`[POS Proxy] Response status: ${response.status}`);
         if (response.status === 401) {
             context.log(`[POS Proxy] 401 Unauthorized - Auth header was: ${authHeader ? authHeader.substring(0, 20) + '...' : 'MISSING'}`);
+            context.log(`[POS Proxy] Target URL was: ${targetUrl}`);
+            context.log(`[POS Proxy] Forwarded headers:`, forwardHeaders);
         }
         context.log(`[POS Proxy] Response headers:`, Object.fromEntries(response.headers.entries()));
         context.log(`[POS Proxy] Response body:`, responseData);
+
+        // For debugging: if 401, include debug info in response
+        let debugInfo = '';
+        if (response.status === 401) {
+            debugInfo = `\n\nDEBUG INFO:\n- Target URL: ${targetUrl}\n- Auth header sent: ${authHeader ? 'YES (length: ' + authHeader.length + ')' : 'NO'}\n- Forwarded headers: ${JSON.stringify(forwardHeaders, null, 2)}`;
+        }
 
         // Return the response
         context.res = {
@@ -78,7 +88,7 @@ module.exports = async function (context, req) {
                 ...context.res.headers,
                 'Content-Type': response.headers.get('content-type') || 'application/json'
             },
-            body: responseData
+            body: responseData + debugInfo
         };
 
     } catch (error) {
