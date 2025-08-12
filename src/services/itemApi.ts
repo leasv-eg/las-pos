@@ -61,11 +61,15 @@ class ItemServiceAPI {
   }
 
   // Get headers with proper authentication for Azure vs development
-  private getHeaders(): HeadersInit {
+  private getHeaders(method: string = 'POST'): HeadersInit {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'lrs-userid': 'ZGV2ZWxvcGVy' // Default user ID from swagger docs
     };
+
+    // Only add Content-Type for non-GET requests
+    if (method !== 'GET') {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (this.config?.bearerToken) {
       if (this.isDevelopment) {
@@ -96,7 +100,7 @@ class ItemServiceAPI {
     const requestOptions: RequestInit = {
       ...options,
       headers: {
-        ...this.getHeaders(),
+        ...this.getHeaders(options.method || 'GET'),
         ...options.headers
       }
     };
