@@ -213,7 +213,7 @@ export class POSApiService {
     };
 
     try {
-      const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/AddItemToCart`, {
+      const response = await fetch(this.constructApiUrl('ItemSale/AddItemToCart'), {
         method: 'POST',
         mode: 'cors',
         headers: this.getHeaders(),
@@ -260,7 +260,7 @@ export class POSApiService {
     };
 
     try {
-      const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/GetCart`, {
+      const response = await fetch(this.constructApiUrl('ItemSale/GetCart'), {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody)
@@ -333,12 +333,9 @@ export class POSApiService {
 
       console.log('📤 Checkout request:', JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/CheckoutCart`, {
+      const response = await fetch(this.constructApiUrl('ItemSale/CheckoutCart'), {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.bearerToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify(requestBody)
       });
 
