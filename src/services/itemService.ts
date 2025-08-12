@@ -63,7 +63,10 @@ class IntegratedItemService {
     }
 
     const { forceRefresh = false, includeCache = true, storeNumber } = options;
+    console.log('🏪 Item Service getItem options:', options);
+    console.log('🏪 Extracted storeNumber:', storeNumber);
     const storeIdentifier: StoreIdentifier = storeNumber ? { storeNumber } : {};
+    console.log('🏪 Final storeIdentifier:', storeIdentifier);
 
     try {
       // Try cache first (unless forced refresh)
