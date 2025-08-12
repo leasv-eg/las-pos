@@ -98,7 +98,13 @@ export class POSApiService {
     };
 
     if (this.bearerToken) {
-      headers['Authorization'] = `Bearer ${this.bearerToken}`;
+      // Use custom header to bypass Azure Functions auto-injection
+      if (this.isDevelopment) {
+        headers['Authorization'] = `Bearer ${this.bearerToken}`;
+      } else {
+        // In production (Azure), use custom header to avoid Azure's auth injection
+        headers['X-POS-Authorization'] = `Bearer ${this.bearerToken}`;
+      }
     }
 
     return headers;

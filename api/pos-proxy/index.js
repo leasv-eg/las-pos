@@ -47,19 +47,29 @@ module.exports = async function (context, req) {
             'User-Agent': 'LAS-POS-Azure-Proxy/1.0'
         };
 
-        // Add authorization header if present (check both cases)
-        // IMPORTANT: Azure Functions may override the Authorization header, so we need to preserve the original
-        const authHeader = req.headers.authorization || req.headers.Authorization;
-        if (authHeader) {
-            // Store original auth header to preserve it from Azure Functions override
-            const originalAuth = authHeader;
-            forwardHeaders['Authorization'] = originalAuth;
-            context.log(`[POS Proxy] Found authorization header: ${authHeader.substring(0, 20)}...`);
-            context.log(`[POS Proxy] Full header length: ${authHeader.length}`);
-            context.log(`[POS Proxy] Preserving original auth: ${originalAuth === authHeader ? 'YES' : 'NO'}`);
+        // WORKAROUND: Azure Functions aggressively replaces Authorization header
+        // So we'll use a custom header name and rename it before forwarding
+        const authHeader = req.headers.authorization || req.headers.Authorization || req.headers['x-pos-authorization'];
+        const customAuthHeader = req.headers['x-pos-authorization'];
+        
+        if (customAuthHeader) {
+            // Client sent custom header to bypass Azure auth injection
+            forwardHeaders['Authorization'] = customAuthHeader;
+            context.log(`[POS Proxy] Found CUSTOM authorization header: ${customAuthHeader.substring(0, 20)}...`);
+            context.log(`[POS Proxy] Custom header length: ${customAuthHeader.length}`);
+        } else if (authHeader) {
+            // Fallback to standard header (development mode)
+            forwardHeaders['Authorization'] = authHeader;
+            context.log(`[POS Proxy] Found standard authorization header: ${authHeader.substring(0, 20)}...`);
+            context.log(`[POS Proxy] Standard header length: ${authHeader.length}`);
         } else {
             context.log(`[POS Proxy] No authorization header found in request`);
             context.log(`[POS Proxy] Available headers:`, Object.keys(req.headers));
+        }
+        
+        const finalAuthHeader = customAuthHeader || authHeader;
+        if (finalAuthHeader) {
+            context.log(`[POS Proxy] Final auth token type: ${finalAuthHeader.startsWith('Bearer eyJ0eXAi') ? 'EG-Retail' : 'Azure-Internal'}`);
         }
 
         context.log(`[POS Proxy] Final forwarded headers:`, forwardHeaders);
@@ -120,7 +130,7 @@ module.exports = async function (context, req) {
         // For debugging: if 401, include debug info in response
         let debugInfo = '';
         if (response.status === 401) {
-            debugInfo = `\n\nDEBUG INFO:\n- Target URL: ${targetUrl}\n- Auth header sent: ${authHeader ? 'YES (length: ' + authHeader.length + ')' : 'NO'}\n- Forwarded headers: ${JSON.stringify(forwardHeaders, null, 2)}`;
+            debugInfo = `\n\nDEBUG INFO:\n- Target URL: ${targetUrl}\n- Custom auth header: ${customAuthHeader ? 'YES (length: ' + customAuthHeader.length + ')' : 'NO'}\n- Standard auth header: ${authHeader ? 'YES (length: ' + authHeader.length + ')' : 'NO'}\n- Forwarded headers: ${JSON.stringify(forwardHeaders, null, 2)}`;
         }
 
         // Return the response
