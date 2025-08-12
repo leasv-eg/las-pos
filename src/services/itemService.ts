@@ -439,17 +439,17 @@ class IntegratedItemService {
         }
 
         const items = (searchResult.items || []).map(item => ({
-          identifier: item.gtin ? { gtin: item.gtin } : undefined,
+          identifier: item.identifier,
           itemText: item.itemText,
           brandName: item.brandName,
           modelNo: item.modelNo,
-          gtin: item.gtin,
-          colorText: item.colorText,
-          sizeText: item.sizeText,
-          currentPrice: undefined, // Basic search doesn't include pricing
-          promotionPrice: undefined,
-          inStock: undefined, // Basic search doesn't include stock info
-          thumbnailUrl: undefined,
+          gtin: item.identifier?.gtin,
+          colorText: item.color?.text,
+          sizeText: item.size?.text,
+          currentPrice: item.currentOrdinaryPrice?.amount || item.currentEffectivePrice?.amount,
+          promotionPrice: item.currentPromotionPrice?.amount,
+          inStock: item.availableInStore && (item.currentStockQuantityAvailable || 0) > 0,
+          thumbnailUrl: item.thumbnailUrl,
           source: 'search' as const
         }));
 

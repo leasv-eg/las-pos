@@ -12,7 +12,6 @@ import {
   ItemPrice,
   POSEnvironment,
   SearchableItem,
-  SearchItemsWithDetails,
   AdvancedSearchItem,
   FacetResults,
   ItemSearchResult
@@ -370,7 +369,7 @@ class ItemServiceAPI {
     } = {}
   ): Promise<{ 
     success: boolean; 
-    items?: SearchableItem[]; 
+    items?: AdvancedSearchItem[]; 
     totalCount?: number;
     error?: string 
   }> {
@@ -407,7 +406,7 @@ class ItemServiceAPI {
       storeNo: options.storeNumber
     };
 
-    const result = await this.makeRequest<SearchItemsWithDetails>(
+    const result = await this.makeRequest<ItemSearchResult>(
       `/gateway/Search/items`,
       {
         method: 'POST',
@@ -418,7 +417,7 @@ class ItemServiceAPI {
     if (result.success && result.data) {
       return {
         success: true,
-        items: result.data.searchableItems || [],
+        items: result.data.results || [],
         totalCount: result.data.totalCount
       };
     }
