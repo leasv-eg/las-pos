@@ -5,9 +5,9 @@ export class POSApiService {
   private isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   private environments: EnvironmentConfig = {
-    dev: this.isDevelopment ? 'https://posapi.egretail-dev.cloud/api' : '/api/pos?env=dev',
-    test: this.isDevelopment ? 'https://posapi.egretail-test.cloud/api' : '/api/pos?env=test',
-    prod: this.isDevelopment ? 'https://posapi.egretail.cloud/api' : '/api/pos?env=prod'
+    dev: this.isDevelopment ? 'https://posapi.egretail-dev.cloud/api' : '/api/pos',
+    test: this.isDevelopment ? 'https://posapi.egretail-test.cloud/api' : '/api/pos',
+    prod: this.isDevelopment ? 'https://posapi.egretail.cloud/api' : '/api/pos'
   };
 
   private currentEnvironment: POSEnvironment = 'test';
@@ -42,7 +42,14 @@ export class POSApiService {
   }
 
   getEnvironmentURL(): string {
-    return this.environments[this.currentEnvironment];
+    const baseUrl = this.environments[this.currentEnvironment];
+    
+    // If using Azure Functions proxy, add environment parameter
+    if (!this.isDevelopment && baseUrl.includes('/api/pos')) {
+      return `${baseUrl}?env=${this.currentEnvironment}`;
+    }
+    
+    return baseUrl;
   }
 
   getAllEnvironments(): { key: POSEnvironment; label: string; url: string }[] {
