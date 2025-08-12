@@ -120,13 +120,24 @@ module.exports = async function (context, req) {
         const responseData = await response.text();
         
         context.log(`[Item Service Proxy] Response status: ${response.status}`);
+        context.log(`[Item Service Proxy] Response length: ${responseData.length} characters`);
+        
+        if (response.status >= 400) {
+            context.log(`[Item Service Proxy] Error response details:`);
+            context.log(`[Item Service Proxy] - Status: ${response.status} ${response.statusText}`);
+            context.log(`[Item Service Proxy] - Response headers:`, response.headers);
+            context.log(`[Item Service Proxy] - Response body (first 500 chars):`, responseData.substring(0, 500));
+            context.log(`[Item Service Proxy] - Request was: ${req.method} ${targetUrl}`);
+            context.log(`[Item Service Proxy] - Auth header length: ${forwardHeaders.Authorization ? forwardHeaders.Authorization.length : 'NONE'}`);
+        } else {
+            context.log(`[Item Service Proxy] Success response body:`, responseData);
+        }
+        
         if (response.status === 401) {
             context.log(`[Item Service Proxy] 401 Unauthorized - Auth header was: ${(customAuthHeader || standardAuthHeader) ? (customAuthHeader || standardAuthHeader).substring(0, 20) + '...' : 'MISSING'}`);
             context.log(`[Item Service Proxy] Target URL was: ${targetUrl}`);
             context.log(`[Item Service Proxy] Forwarded headers:`, forwardHeaders);
         }
-        context.log(`[Item Service Proxy] Response headers:`, response.headers);
-        context.log(`[Item Service Proxy] Response body:`, responseData);
 
         // For debugging: if 401, include debug info in response
         let debugInfo = '';
@@ -146,6 +157,12 @@ module.exports = async function (context, req) {
 
     } catch (error) {
         context.log.error('[Item Service Proxy] Error:', error);
+        context.log.error('[Item Service Proxy] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            code: error.code
+        });
         
         context.res = {
             status: 500,
@@ -153,7 +170,10 @@ module.exports = async function (context, req) {
             body: JSON.stringify({
                 error: 'Proxy error',
                 message: error.message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                requestMethod: req.method,
+                requestPath: context.req.params.path,
+                errorType: error.name || 'Unknown'
             })
         };
     }
