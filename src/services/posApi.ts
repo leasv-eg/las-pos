@@ -5,9 +5,9 @@ export class POSApiService {
   private isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   private environments: EnvironmentConfig = {
-    dev: this.isDevelopment ? '/api/posapi-dev' : '/posapi',
-    test: this.isDevelopment ? '/api/posapi-test' : '/posapi', 
-    prod: this.isDevelopment ? '/api/posapi-prod' : '/posapi'
+    dev: 'https://posapi.egretail-dev.cloud/api',
+    test: 'https://posapi.egretail-test.cloud/api',
+    prod: 'https://posapi.egretail.cloud/api'
   };
 
   private currentEnvironment: POSEnvironment = 'test';
@@ -127,6 +127,7 @@ export class POSApiService {
     try {
       const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/NewCartWithItems`, {
         method: 'POST',
+        mode: 'cors',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody)
       });
@@ -197,6 +198,7 @@ export class POSApiService {
     try {
       const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/AddItemToCart`, {
         method: 'POST',
+        mode: 'cors',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody)
       });

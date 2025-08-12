@@ -5,10 +5,6 @@
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/posapi/*",
-      "rewrite": "https://posapi.egretail.cloud/api/{*}"
-    },
-    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
