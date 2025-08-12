@@ -366,6 +366,7 @@ class ItemServiceAPI {
     options: {
       top?: number;
       skip?: number;
+      storeNumber?: number;
     } = {}
   ): Promise<{ 
     success: boolean; 
@@ -391,6 +392,11 @@ class ItemServiceAPI {
     
     if (options.skip !== undefined) {
       params.append('skip', options.skip.toString());
+    }
+
+    // Add store number if provided - this might be required by the Item Service
+    if (options.storeNumber !== undefined) {
+      params.append('storeNumber', options.storeNumber.toString());
     }
 
     const result = await this.makeRequest<SearchItemsWithDetails>(

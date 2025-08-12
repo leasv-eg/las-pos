@@ -427,7 +427,8 @@ class IntegratedItemService {
       } else {
         // Use basic search for speed
         const searchResult = await itemServiceAPI.searchItemsWithDetails(query, {
-          top: maxResults
+          top: maxResults,
+          storeNumber: storeNumber
         });
 
         if (!searchResult.success) {
