@@ -16,7 +16,7 @@ export class POSApiService {
   private storeNum: number = 1000;
 
   constructor() {
-    console.log('🔧 POS API Service initialized');
+    console.log('🔧 POS API Service initialized v2');
     console.log(`🏠 Development mode: ${this.isDevelopment}`);
     console.log('🌐 Environment URLs:', this.environments);
     // Load saved environment preference
@@ -42,14 +42,18 @@ export class POSApiService {
   }
 
   getEnvironmentURL(): string {
-    const baseUrl = this.environments[this.currentEnvironment];
+    return this.environments[this.currentEnvironment];
+  }
+
+  private constructApiUrl(endpoint: string): string {
+    const baseUrl = this.getEnvironmentURL();
     
     // If using Azure Functions proxy, add environment parameter
     if (!this.isDevelopment && baseUrl.includes('/api/pos')) {
-      return `${baseUrl}?env=${this.currentEnvironment}`;
+      return `${baseUrl}/${endpoint}?env=${this.currentEnvironment}`;
     }
     
-    return baseUrl;
+    return `${baseUrl}/${endpoint}`;
   }
 
   getAllEnvironments(): { key: POSEnvironment; label: string; url: string }[] {
@@ -127,12 +131,12 @@ export class POSApiService {
       }))
     };
 
-    console.log('📤 Request URL:', `${this.getEnvironmentURL()}/ItemSale/NewCartWithItems`);
+    console.log('📤 Request URL:', this.constructApiUrl('ItemSale/NewCartWithItems'));
     console.log('📤 Request Body:', JSON.stringify(requestBody, null, 2));
     console.log('📤 Headers:', this.getHeaders());
 
     try {
-      const response = await fetch(`${this.getEnvironmentURL()}/ItemSale/NewCartWithItems`, {
+      const response = await fetch(this.constructApiUrl('ItemSale/NewCartWithItems'), {
         method: 'POST',
         mode: 'cors',
         headers: this.getHeaders(),
@@ -367,7 +371,7 @@ export class POSApiService {
   // Test connection to the API
   async testConnection(): Promise<{success: boolean, message: string, config: any}> {
     console.log('🔄 Testing API connection...');
-    console.log(`🌐 Current URL: ${this.getEnvironmentURL()}/ItemSale/NewCartWithItems`);
+    console.log(`🌐 Current URL: ${this.constructApiUrl('ItemSale/NewCartWithItems')}`);
 
     if (!this.bearerToken) {
       return {
