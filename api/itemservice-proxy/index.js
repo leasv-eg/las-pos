@@ -41,10 +41,14 @@ module.exports = async function (context, req) {
 
         // Build headers for forwarding
         const forwardHeaders = {
-            'Content-Type': 'application/json',
             'User-Agent': 'LAS-POS-Azure-Proxy/1.0',
             'lrs-userid': req.headers['lrs-userid'] || 'ZGV2ZWxvcGVy'
         };
+
+        // Only add Content-Type for non-GET requests
+        if (req.method !== 'GET') {
+            forwardHeaders['Content-Type'] = 'application/json';
+        }
 
         // Handle authorization headers (both standard and custom)
         const customAuthHeader = req.headers['x-item-authorization'];
