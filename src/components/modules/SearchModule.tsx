@@ -247,12 +247,74 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
   onProductSelect,
   onProductAdd
 }) => {
+  console.log('🔍 SearchModule: Component mounting/re-rendering');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [previewIndex, setPreviewIndex] = useState(-1);
   const { showError, showSuccess } = useNotifications();
+
+  console.log('🔍 SearchModule: About to set up useEffect');
+
+  // Ensure item service is properly initialized and configured
+  useEffect(() => {
+    console.log('🔧 SearchModule: useEffect starting - checking itemService status...');
+    
+    const ensureServiceReady = async () => {
+      try {
+        console.log('🔧 SearchModule: Checking itemService status...');
+        
+        // Check if service is ready
+        if (!itemService.isReady()) {
+          console.log('🔧 SearchModule: Item service not ready, attempting to initialize...');
+          
+          // Try to get tokens from localStorage
+          const itemToken = localStorage.getItem('item_bearer_token') || 
+                           localStorage.getItem('item-token');
+          const itemEnvironment = localStorage.getItem('item_environment') || 'prod';
+          
+          console.log('🔧 SearchModule: Found tokens:', {
+            hasToken: !!itemToken,
+            tokenLength: itemToken?.length || 0,
+            environment: itemEnvironment
+          });
+          
+          if (itemToken) {
+            console.log('🔧 SearchModule: Initializing and configuring service...');
+            
+            // Initialize the service
+            await itemService.init();
+            console.log('✅ SearchModule: itemService.init() completed');
+            
+            // Configure with tokens
+            itemService.configure(itemToken, itemEnvironment as any);
+            console.log('✅ SearchModule: itemService.configure() completed');
+            
+            // Verify it's working
+            const status = itemService.getStatus();
+            const isReady = itemService.isReady();
+            console.log('🔧 SearchModule: Final status:', { isReady, status });
+            
+            if (isReady) {
+              console.log('✅ SearchModule: Item service is now ready for searches');
+            } else {
+              console.log('❌ SearchModule: Item service still not ready after configuration');
+            }
+          } else {
+            console.log('❌ SearchModule: No tokens found in localStorage');
+          }
+        } else {
+          console.log('✅ SearchModule: Item service already ready');
+        }
+      } catch (error) {
+        console.error('❌ SearchModule: Failed to initialize item service:', error);
+      }
+    };
+
+    ensureServiceReady();
+  }, []); // Run once on mount
 
   // Search functionality
   useEffect(() => {
@@ -266,11 +328,34 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
       setIsLoading(true);
       try {
+        console.log('🚨 SearchModule: Search function starting - ALWAYS SHOWS');
+        
+        // Ensure service is ready before searching
+        if (!itemService.isReady()) {
+          console.log('🔧 SearchModule: Service not ready during search, initializing...');
+          const itemToken = localStorage.getItem('item_bearer_token');
+          const itemEnvironment = localStorage.getItem('item_environment');
+          
+          if (itemToken) {
+            await itemService.init();
+            itemService.configure(itemToken, itemEnvironment as any);
+            console.log('✅ SearchModule: Service initialized during search');
+          } else {
+            console.error('❌ SearchModule: No token available for search initialization');
+            showError('Search Error', 'Authentication required');
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        console.log('🚨 SearchModule: About to call itemService.searchProducts');
+
         const response = await itemService.searchProducts(searchTerm.trim(), {
           maxResults: 20,
           storeNumber: 1000
         });
         console.log(`🔍 SearchModule: Raw response for "${searchTerm}":`, response);
+        console.log('🚨🚨🚨 PROOF THAT MY CHANGES ARE WORKING! 🚨🚨🚨');
         
         if (response.success && response.items) {
           console.log(`🔍 SearchModule: Processing ${response.items.length} items`);

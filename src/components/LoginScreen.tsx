@@ -181,6 +181,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setError('');
   };
 
+  const handleUserNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Move focus to password field
+      const passwordField = document.getElementById('password') as HTMLInputElement;
+      if (passwordField) {
+        passwordField.focus();
+      }
+    }
+  };
+
+  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Submit the form
+      handleSubmit(e as any);
+    }
+  };
+
   return (
     <LoginContainer>
       <LoginCard>
@@ -195,6 +214,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               type="text"
               value={userNumber}
               onChange={(e) => setUserNumber(e.target.value)}
+              onKeyDown={handleUserNumberKeyDown}
               disabled={isLoading}
               placeholder="Enter your user number"
               autoFocus
@@ -208,6 +228,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handlePasswordKeyDown}
               disabled={isLoading}
               placeholder="Enter your password"
             />

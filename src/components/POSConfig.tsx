@@ -150,26 +150,55 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
   const [cacheStats, setCacheStats] = useState<{ totalItems: number } | null>(null);
 
   useEffect(() => {
-    // Load saved POS API configuration
-    const savedToken = localStorage.getItem('pos_bearer_token');
-    const savedApiKey = localStorage.getItem('pos_api_key');
-    const savedStoreNum = localStorage.getItem('pos_store_num');
-    const savedEnvironment = localStorage.getItem('pos_environment') as POSEnvironment;
+    const initializeServices = async () => {
+      // Load saved POS API configuration
+      const savedToken = localStorage.getItem('pos_bearer_token');
+      const savedApiKey = localStorage.getItem('pos_api_key');
+      const savedStoreNum = localStorage.getItem('pos_store_num');
+      const savedEnvironment = localStorage.getItem('pos_environment') as POSEnvironment;
 
-    if (savedToken) setBearerToken(savedToken);
-    if (savedApiKey) setApiKey(savedApiKey);
-    if (savedStoreNum) setStoreNum(parseInt(savedStoreNum));
-    if (savedEnvironment) setEnvironment(savedEnvironment);
+      if (savedToken) setBearerToken(savedToken);
+      if (savedApiKey) setApiKey(savedApiKey);
+      if (savedStoreNum) setStoreNum(parseInt(savedStoreNum));
+      if (savedEnvironment) setEnvironment(savedEnvironment);
 
-    // Load saved Item Service configuration
-    const savedItemToken = localStorage.getItem('item_bearer_token');
-    const savedItemEnvironment = localStorage.getItem('item_environment') as POSEnvironment;
+      // Load saved Item Service configuration
+      const savedItemToken = localStorage.getItem('item_bearer_token');
+      const savedItemEnvironment = localStorage.getItem('item_environment') as POSEnvironment;
 
-    if (savedItemToken) setItemBearerToken(savedItemToken);
-    if (savedItemEnvironment) setItemEnvironment(savedItemEnvironment);
+      console.log('🔍 POSConfig: Checking saved Item Service config:', {
+        hasToken: !!savedItemToken,
+        tokenLength: savedItemToken?.length || 0,
+        environment: savedItemEnvironment || 'none'
+      });
 
-    // Load cache stats
-    updateCacheStats();
+      if (savedItemToken) setItemBearerToken(savedItemToken);
+      if (savedItemEnvironment) setItemEnvironment(savedItemEnvironment);
+
+      // Initialize and configure item service if we have saved config
+      if (savedItemToken && savedItemEnvironment) {
+        try {
+          console.log('🔧 Initializing Item Service from saved config...');
+          await itemService.init();
+          itemService.configure(savedItemToken, savedItemEnvironment);
+          
+          // Verify service is ready
+          const isReady = itemService.isReady();
+          const status = itemService.getStatus();
+          console.log('✅ Item Service initialized and configured from saved settings');
+          console.log('🔍 Item Service status:', { isReady, status });
+        } catch (error) {
+          console.error('❌ Failed to initialize Item Service from saved config:', error);
+        }
+      } else {
+        console.log('⚠️ No saved Item Service configuration found');
+      }
+
+      // Load cache stats
+      updateCacheStats();
+    };
+
+    initializeServices();
   }, []);
 
   const updateCacheStats = async () => {
@@ -305,6 +334,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
   // Item Service Functions
   const saveItemConfiguration = async () => {
     try {
+      // Initialize and configure the item service
+      await itemService.init();
       itemService.configure(itemBearerToken, itemEnvironment);
       
       // Save to localStorage
@@ -325,7 +356,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
     setItemStatusMessage('Testing Item Service connection...');
     
     try {
-      // First save the configuration
+      // Initialize and configure the item service
+      await itemService.init();
       itemService.configure(itemBearerToken, itemEnvironment);
       
       // Simple test - try to get an item (will test authentication)
@@ -366,6 +398,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
     setItemStatusMessage('Testing item lookup...');
     
     try {
+      // Initialize and configure the item service
+      await itemService.init();
       itemService.configure(itemBearerToken, itemEnvironment);
       
       // Test with a sample barcode
@@ -417,6 +451,8 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
     setItemStatusMessage('Testing specific GTIN: 7323342206972...');
     
     try {
+      // Initialize and configure the item service
+      await itemService.init();
       itemService.configure(itemBearerToken, itemEnvironment);
       
       const gtin = '7323342206972';

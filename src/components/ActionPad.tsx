@@ -301,8 +301,9 @@ export const ActionPad: React.FC<ActionPadProps> = ({
         }
         
         // If no direct match or not a GTIN, use text search
-        if (foundProducts.length === 0 && itemService.isReady()) {
-          console.log('🔍 Using Item Service text search...');
+        // ALWAYS try itemService.searchProducts - it has auto-initialization logic
+        if (foundProducts.length === 0) {
+          console.log('🔍 Using Item Service text search (with auto-initialization)...');
           const posConfig = posApiService.getConfig();
           
           const searchResult = await itemService.searchProducts(searchQuery, {
@@ -315,29 +316,39 @@ export const ActionPad: React.FC<ActionPadProps> = ({
             console.log(`✅ Found ${searchResult.items.length} items via text search`);
             
             // Convert search results to Product format
-            searchResult.items.forEach(item => {
-              if (item.identifier?.gtin || item.gtin) {
-                const gtin = item.identifier?.gtin || item.gtin || '';
-                const productImages = productImageService.getImageUrls(gtin);
-                
-                const product: Product = {
-                  id: item.identifier?.gtin || item.identifier?.sku || item.gtin || crypto.randomUUID(),
-                  companyId: 'external',
-                  sku: gtin,
-                  name: item.itemText || item.brandName || 'Unknown Product',
-                  price: item.currentPrice || 0,
-                  category: 'General',
-                  images: productImages,
-                  isActive: true,
-                  inventory: [],
-                  attributes: [],
-                  createdAt: new Date(),
-                  updatedAt: new Date()
-                };
-                
-                foundProducts.push(product);
-              }
+            searchResult.items.forEach((item, index) => {
+              console.log(`🔍 Converting item ${index + 1}:`, {
+                identifier: item.identifier,
+                gtin: item.gtin,
+                itemText: item.itemText,
+                brandName: item.brandName
+              });
+              
+              // More flexible conversion - don't require GTIN
+              const gtin = item.gtin || '';
+              const itemId = item.identifier?.gtin || item.identifier?.sku || item.gtin || crypto.randomUUID();
+              const productImages = gtin ? productImageService.getImageUrls(gtin) : [];
+              
+              const product: Product = {
+                id: itemId,
+                companyId: 'external',
+                sku: item.identifier?.sku || gtin || itemId,
+                name: item.itemText || item.brandName || `Product ${index + 1}`,
+                price: item.currentPrice || 0,
+                category: 'General',
+                images: productImages,
+                isActive: true,
+                inventory: [],
+                attributes: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+              
+              foundProducts.push(product);
+              console.log(`✅ Converted item to product: ${product.name} (ID: ${product.id})`);
             });
+            
+            console.log(`🎉 Successfully converted ${foundProducts.length} items to products!`);
           } else {
             console.log('⚠️ No results from Item Service text search:', searchResult.error);
           }

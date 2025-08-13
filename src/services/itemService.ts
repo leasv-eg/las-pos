@@ -2,6 +2,7 @@
 
 import { itemServiceAPI } from './itemApi';
 import { itemCacheService } from './itemCache';
+import { TokenValidator } from './tokenValidator';
 import { 
   ItemIdentifier, 
   StoreIdentifier, 
@@ -355,11 +356,48 @@ class IntegratedItemService {
     totalCount?: number;
     error?: string 
   }> {
+    console.log('🚨 SEARCH FUNCTION CALLED WITH FRESH CODE - VERSION 2.0!');
+    console.log('🚨 Service ready status:', this.isReady());
+    
+    // Auto-initialize if not ready but tokens are available
     if (!this.isReady()) {
-      return {
-        success: false,
-        error: 'Service not initialized or API not configured'
-      };
+      console.log('🔧 itemService.searchProducts: Service not ready, attempting auto-initialization...');
+      
+      // Check token validity first
+      const tokenStatus = TokenValidator.checkStoredTokens();
+      TokenValidator.logTokenStatus();
+      
+      if (tokenStatus.needsRefresh) {
+        console.error('❌ itemService.searchProducts: Tokens are expired or invalid');
+        return {
+          success: false,
+          error: 'Tokens have expired. Please refresh your authentication.'
+        };
+      }
+      
+      const itemToken = localStorage.getItem('item_bearer_token');
+      const itemEnvironment = localStorage.getItem('item_environment');
+      
+      if (itemToken) {
+        console.log('🔧 itemService.searchProducts: Found valid tokens, initializing service...');
+        try {
+          await this.init();
+          this.configure(itemToken, itemEnvironment as any);
+          console.log('✅ itemService.searchProducts: Auto-initialization successful!');
+        } catch (error) {
+          console.error('❌ itemService.searchProducts: Auto-initialization failed:', error);
+          return {
+            success: false,
+            error: 'Failed to auto-initialize service'
+          };
+        }
+      } else {
+        console.log('❌ itemService.searchProducts: No tokens available for auto-initialization');
+        return {
+          success: false,
+          error: 'Service not initialized or API not configured'
+        };
+      }
     }
 
     if (!query.trim()) {
@@ -426,10 +464,13 @@ class IntegratedItemService {
 
       } else {
         // Use basic search for speed
+        console.log('🚀 Using basic search...');
         const searchResult = await itemServiceAPI.searchItemsWithDetails(query, {
           top: maxResults,
           storeNumber: storeNumber
         });
+
+        console.log('🔍 Basic search raw result:', JSON.stringify(searchResult, null, 2));
 
         if (!searchResult.success) {
           return {
@@ -438,20 +479,36 @@ class IntegratedItemService {
           };
         }
 
-        const items = (searchResult.items || []).map(item => ({
-          identifier: item.identifier,
-          itemText: item.itemText,
-          brandName: item.brandName,
-          modelNo: item.modelNo,
-          gtin: item.identifier?.gtin,
-          colorText: item.color?.text,
-          sizeText: item.size?.text,
-          currentPrice: item.currentOrdinaryPrice?.amount || item.currentEffectivePrice?.amount,
-          promotionPrice: item.currentPromotionPrice?.amount,
-          inStock: item.availableInStore && (item.currentStockQuantityAvailable || 0) > 0,
-          thumbnailUrl: item.thumbnailUrl,
-          source: 'search' as const
-        }));
+        console.log('🔍 Raw items array (first 2):', JSON.stringify(searchResult.items?.slice(0, 2), null, 2));
+
+        const items = (searchResult.items || []).map((item: any, index) => {
+          console.log(`🔍 Processing item ${index + 1}:`, JSON.stringify(item, null, 2));
+          
+          // Map the actual API response structure to our expected format
+          const identifier = {
+            sku: item.sku,
+            gtin: item.mainGtin || item.gtin
+          };
+          const itemText = item.itemTexts?.NO?.itemName || item.itemTexts?.EN?.itemName || `Product ${index + 1}`;
+          const brandName = item.brand?.name || 'Unknown Brand';
+          
+          return {
+            identifier,
+            itemText,
+            brandName,
+            modelNo: item.modelNo,
+            gtin: item.mainGtin || item.gtin,
+            colorText: item.colorName,
+            sizeText: item.sizeName,
+            currentPrice: item.currentOrdinaryPrice?.amount || item.currentEffectivePrice?.amount || 0,
+            promotionPrice: item.currentPromotionPrice?.amount,
+            inStock: item.availableInStore && (item.currentStockQuantityAvailable || 0) > 0,
+            thumbnailUrl: item.thumbnailUrl,
+            source: 'search' as const
+          };
+        });
+
+        console.log('🔍 Processed items (first 2):', JSON.stringify(items.slice(0, 2), null, 2));
 
         return {
           success: true,

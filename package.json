@@ -14,7 +14,12 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:search": "playwright test tests/search.spec.ts",
+    "test:api": "playwright test tests/api-integration.spec.ts"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -31,9 +36,11 @@
     "workbox-window": "^7.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.2.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/styled-components": "^5.1.26",

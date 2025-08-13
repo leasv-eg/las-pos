@@ -6,6 +6,8 @@ import { POSConfig } from './POSConfig';
 import { ModularPOSInterface } from './ModularPOSInterface';
 import { NotificationProvider } from './NotificationProvider';
 import { apiService } from '../services/api';
+import { itemService } from '../services/itemService';
+import { TokenValidator } from '../services/tokenValidator';
 import { User, Company, Store, Device } from '../types';
 
 const AppContainer = styled.div`
@@ -68,7 +70,7 @@ interface AppState {
 }
 
 export const App: React.FC = () => {
-  console.log('🔥 App component rendering...');
+  console.log('🔥 App component rendering - MODIFIED VERSION WITH USEEFFECT...');
   
   const [appState, setAppState] = useState<AppState>({
     isAuthenticated: false,
@@ -84,6 +86,38 @@ export const App: React.FC = () => {
   const [useModularInterface, setUseModularInterface] = useState(false);
 
   useEffect(() => {
+    console.log('🚀 App: useEffect starting...');
+    
+    // Set up token monitoring
+    TokenValidator.setupTokenWarnings();
+    
+    try {
+      console.log('🔍 App: localStorage check...');
+      const itemToken = localStorage.getItem('item_bearer_token');
+      console.log('🔍 App: itemToken exists:', !!itemToken);
+      
+      if (itemToken) {
+        console.log('🔧 App: Token found, length:', itemToken.length);
+        // Try basic itemService operations
+        console.log('🔧 App: Calling itemService.init()...');
+        itemService.init().then(() => {
+          console.log('✅ App: itemService.init() completed');
+          console.log('🔧 App: Calling itemService.configure()...');
+          itemService.configure(itemToken, 'prod');
+          console.log('✅ App: itemService.configure() completed');
+          
+          const isReady = itemService.isReady();
+          console.log('🔍 App: itemService.isReady():', isReady);
+        }).catch(error => {
+          console.error('❌ App: itemService.init() failed:', error);
+        });
+      } else {
+        console.log('⚠️ App: No token found');
+      }
+    } catch (error) {
+      console.error('❌ App: Error in useEffect:', error);
+    }
+
     // Check if user is already authenticated
     if (apiService.isAuthenticated()) {
       const user = apiService.getStoredUser();
@@ -170,7 +204,7 @@ export const App: React.FC = () => {
             )}
             
             <StatusButton onClick={() => setShowPOSConfig(!showPOSConfig)}>
-              🔧 POS API
+              ⚙️
             </StatusButton>
             <StatusButton onClick={() => setUseModularInterface(!useModularInterface)}>
               {useModularInterface ? '📋 Classic' : '🧩 Modular'}

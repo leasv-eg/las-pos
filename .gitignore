@@ -13,3 +13,11 @@ Thumbs.db
 !.vscode/launch.json
 !.vscode/extensions.json
 *.tsbuildinfo
+
+# Test files with sensitive data
+test-tokens.json
+tests/*token*.spec.ts
+tests/fresh-token*.spec.ts
+tests/multiple-search-test.spec.ts
+test-results/
+playwright-report/
