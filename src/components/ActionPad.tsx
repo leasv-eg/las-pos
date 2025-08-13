@@ -548,6 +548,10 @@ export const ActionPad: React.FC<ActionPadProps> = ({
               <ProductCard
                 key={product.id}
                 onClick={() => handleProductClick(product, index)}
+                onDoubleClick={() => {
+                  console.log('🛒 Double-click detected, adding to cart:', product.name);
+                  onAddProduct(product.sku);
+                }}
                 isSelected={selectedIndex === index}
                 isPreview={previewedProduct?.id === product.id}
               >
