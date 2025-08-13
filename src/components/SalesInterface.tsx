@@ -133,7 +133,7 @@ export const SalesInterface: React.FC<SalesInterfaceProps> = ({
 
   const handleAddProduct = async (productCode: string, quantity: number = 1) => {
     try {
-      console.log('🛒 Looking up product first:', { productCode, quantity });
+      console.log('🛒 Looking up product first (v2):', { productCode, quantity });
       
       // STEP 1: First look up the item using Item Service
       let itemInfo = null;
