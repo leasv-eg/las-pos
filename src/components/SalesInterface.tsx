@@ -145,7 +145,16 @@ export const SalesInterface: React.FC<SalesInterfaceProps> = ({
       if (itemService.isReady()) {
         console.log('🔍 Looking up item via Item Service...');
         const posConfig = posApiService.getConfig();
-        const itemResult = await itemService.getItem({ gtin: productCode }, { storeNumber: posConfig.storeNum });
+        
+        // Try looking up by SKU first (most search results provide SKUs)
+        console.log('🔍 Trying SKU lookup for:', productCode);
+        let itemResult = await itemService.getItem({ sku: productCode }, { storeNumber: posConfig.storeNum });
+        
+        // If SKU lookup fails, try GTIN lookup (for direct barcode scans)
+        if (!itemResult.success || !itemResult.result) {
+          console.log('🔍 SKU lookup failed, trying GTIN lookup for:', productCode);
+          itemResult = await itemService.getItem({ gtin: productCode }, { storeNumber: posConfig.storeNum });
+        }
         
         if (itemResult.success && itemResult.result) {
           itemInfo = itemResult.result.item;
@@ -158,9 +167,9 @@ export const SalesInterface: React.FC<SalesInterfaceProps> = ({
           }
           
           itemFound = true;
-          console.log('✅ Item found via Item Service:', { productName, productPrice, source: itemResult.result.source });
+          console.log('✅ Item found via Item Service:', { productName, productPrice, source: itemResult.result.source, lookupType: itemResult.result.item.identifier?.sku ? 'SKU' : 'GTIN' });
         } else {
-          console.log('⚠️ Item not found in Item Service:', itemResult.error);
+          console.log('⚠️ Item not found in Item Service (tried both SKU and GTIN):', itemResult.error);
         }
       }
 
