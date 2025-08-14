@@ -3,127 +3,299 @@ import styled from 'styled-components';
 import { posApiService } from '../services/posApi';
 import { itemService } from '../services/itemService';
 import { POSEnvironment } from '../types/posApiTypes';
+import { mediaQueries, spacing, touchTargets, panelSizes } from '../styles/responsive';
+
+const ConfigOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: ${spacing.md};
+  
+  ${mediaQueries.mobile} {
+    padding: 0;
+    align-items: flex-start;
+  }
+`;
 
 const ConfigContainer = styled.div`
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin: 20px;
-  max-width: 600px;
-  max-height: 80vh;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: ${panelSizes.desktop.settings};
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  
+  ${mediaQueries.tablet} {
+    max-width: ${panelSizes.tablet.settings};
+    max-height: 85vh;
+  }
+  
+  ${mediaQueries.mobile} {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    height: 100vh;
+  }
+`;
+
+const ConfigHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: ${spacing.lg} ${spacing.lg} ${spacing.md} ${spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  
+  ${mediaQueries.mobile} {
+    padding: ${spacing.md};
+  }
+`;
+
+const ConfigTitle = styled.h2`
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  
+  ${mediaQueries.mobile} {
+    font-size: 20px;
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: ${spacing.sm};
+  border-radius: 50%;
+  min-width: ${touchTargets.comfortable};
+  min-height: ${touchTargets.comfortable};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ConfigContent = styled.div`
+  flex: 1;
   overflow-y: auto;
+  padding: ${spacing.lg};
+  
+  ${mediaQueries.mobile} {
+    padding: ${spacing.md};
+  }
 `;
 
 const ConfigSection = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: ${spacing.xl};
+  
+  ${mediaQueries.mobile} {
+    margin-bottom: ${spacing.lg};
+  }
+`;
+
+const SectionTitle = styled.h3`
+  margin: 0 0 ${spacing.md} 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  padding-bottom: ${spacing.sm};
+  border-bottom: 2px solid #e0e0e0;
+  
+  ${mediaQueries.mobile} {
+    font-size: 16px;
+  }
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: ${spacing.sm};
+  font-weight: 600;
   color: #333;
+  font-size: 14px;
+  
+  ${mediaQueries.mobile} {
+    font-size: 16px; // Larger text on mobile
+  }
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 10px;
+  padding: ${spacing.md};
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px; // 16px prevents zoom on iOS
+  margin-bottom: ${spacing.md};
+  min-height: ${touchTargets.comfortable};
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  }
+  
+  ${mediaQueries.touch} {
+    min-height: ${touchTargets.comfortable};
+    font-size: 16px;
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  min-height: 100px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  min-height: 120px;
+  padding: ${spacing.md};
+  border: 2px solid #ddd;
+  border-radius: 8px;
   font-size: 14px;
-  font-family: monospace;
-  margin-bottom: 10px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  margin-bottom: ${spacing.md};
   resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  }
+  
+  ${mediaQueries.mobile} {
+    min-height: 100px;
+    font-size: 14px;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: ${spacing.sm};
+  margin-top: ${spacing.md};
+  flex-wrap: wrap;
+  
+  ${mediaQueries.mobile} {
+    flex-direction: column;
   }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' }>`
-  padding: 10px 15px;
-  margin: 5px 5px 5px 0;
+  padding: ${spacing.md} ${spacing.lg};
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: ${touchTargets.comfortable};
+  transition: all 0.2s;
+  flex: 1;
+  
+  ${mediaQueries.mobile} {
+    width: 100%;
+    margin-bottom: ${spacing.sm};
+  }
   
   ${({ variant = 'primary' }) => {
     switch (variant) {
       case 'primary':
-        return 'background: #007bff; color: white;';
+        return `
+          background: #1976d2; 
+          color: white;
+          &:hover { background: #1565c0; }
+        `;
       case 'secondary':
-        return 'background: #6c757d; color: white;';
+        return `
+          background: #6c757d; 
+          color: white;
+          &:hover { background: #5a6268; }
+        `;
       case 'success':
-        return 'background: #28a745; color: white;';
+        return `
+          background: #28a745; 
+          color: white;
+          &:hover { background: #218838; }
+        `;
       case 'danger':
-        return 'background: #dc3545; color: white;';
+        return `
+          background: #dc3545; 
+          color: white;
+          &:hover { background: #c82333; }
+        `;
       case 'warning':
-        return 'background: #ffc107; color: #212529;';
+        return `
+          background: #ffc107; 
+          color: #212529;
+          &:hover { background: #e0a800; }
+        `;
       default:
-        return 'background: #007bff; color: white;';
+        return `
+          background: #1976d2; 
+          color: white;
+          &:hover { background: #1565c0; }
+        `;
     }
   }}
-
-  &:hover {
-    opacity: 0.9;
-  }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
+  
+  &:active {
+    transform: translateY(1px);
+  }
 `;
 
 const StatusIndicator = styled.div<{ $status: 'success' | 'error' | 'warning' | 'info' }>`
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
+  padding: ${spacing.md};
+  margin: ${spacing.md} 0;
+  border-radius: 8px;
+  font-weight: 500;
   
   ${({ $status }) => {
     switch ($status) {
       case 'success':
-        return 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+        return 'background: #d4edda; color: #155724; border: 2px solid #c3e6cb;';
       case 'error':
-        return 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;';
+        return 'background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb;';
       case 'warning':
-        return 'background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;';
+        return 'background: #fff3cd; color: #856404; border: 2px solid #ffeaa7;';
       case 'info':
-        return 'background: #d1ecf1; color: #0c5460; border: 1px solid #b8daff;';
+        return 'background: #d1ecf1; color: #0c5460; border: 2px solid #b8daff;';
     }
   }}
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 10px;
+  padding: ${spacing.md};
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: ${spacing.md};
   background: white;
+  min-height: ${touchTargets.comfortable};
+  cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  }
+  
+  ${mediaQueries.touch} {
+    font-size: 16px; // Prevent zoom on iOS
   }
 `;
 
@@ -547,236 +719,165 @@ export const POSConfig: React.FC<POSConfigProps> = ({ isVisible, onClose }) => {
   if (!isVisible) return null;
 
   return (
-    <ConfigContainer>
-      <h2>🔧 POS API Configuration</h2>
-      
-      <ConfigSection>
-        <h3>Current Status</h3>
-        <div>
-          <strong>Token Status:</strong> {config.hasToken ? '✅ Set' : '❌ Not set'}<br/>
-          <strong>Environment:</strong> {config.environment}<br/>
-          <strong>Store Number:</strong> {config.storeNum}<br/>
-          <strong>API Key:</strong> {config.apiKey}<br/>
-          <strong>Base URL:</strong> {config.environmentURL}
-        </div>
-      </ConfigSection>
+    <ConfigOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <ConfigContainer>
+        <ConfigHeader>
+          <ConfigTitle>⚙️ POS Configuration</ConfigTitle>
+          <CloseButton onClick={onClose} aria-label="Close configuration">
+            ✕
+          </CloseButton>
+        </ConfigHeader>
+        
+        <ConfigContent>
+          <ConfigSection>
+            <SectionTitle>🔌 POS API Status</SectionTitle>
+            <StatusIndicator $status={config.hasToken ? 'success' : 'warning'}>
+              <strong>Token:</strong> {config.hasToken ? '✅ Configured' : '⚠️ Missing'}<br/>
+              <strong>Environment:</strong> {config.environment}<br/>
+              <strong>Store:</strong> {config.storeNum}<br/>
+              <strong>API Key:</strong> {config.apiKey}<br/>
+              <strong>Endpoint:</strong> {config.environmentURL}
+            </StatusIndicator>
+          </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="environment">Environment</Label>
-        <Select 
-          id="environment" 
-          value={environment} 
-          onChange={(e) => setEnvironment(e.target.value as POSEnvironment)}
-        >
-          <option value="dev">Development (via proxy → posapi-dev.egretail.cloud/api)</option>
-          <option value="test">Test (via proxy → posapi-test.egretail.cloud/api)</option>
-          <option value="prod">Production (via proxy → posapi.egretail.cloud/api)</option>
-        </Select>
-      </ConfigSection>
+          <ConfigSection>
+            <Label htmlFor="environment">Environment</Label>
+            <Select 
+              id="environment" 
+              value={environment} 
+              onChange={(e) => setEnvironment(e.target.value as POSEnvironment)}
+            >
+              <option value="dev">🔧 Development (via proxy → posapi-dev.egretail.cloud/api)</option>
+              <option value="test">🧪 Test (via proxy → posapi-test.egretail.cloud/api)</option>
+              <option value="prod">🚀 Production (via proxy → posapi.egretail.cloud/api)</option>
+            </Select>
+          </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="storeNum">Store Number</Label>
-        <Input
-          id="storeNum"
-          type="number"
-          value={storeNum}
-          onChange={(e) => setStoreNum(parseInt(e.target.value) || 1000)}
-          placeholder="1000"
-        />
-      </ConfigSection>
+          <ConfigSection>
+            <Label htmlFor="storeNum">Store Number</Label>
+            <Input
+              id="storeNum"
+              type="number"
+              value={storeNum}
+              onChange={(e) => setStoreNum(parseInt(e.target.value) || 1000)}
+              placeholder="Enter store number (e.g., 1000)"
+            />
+          </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="apiKey">API Key</Label>
-        <Input
-          id="apiKey"
-          type="text"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="mobile"
-        />
-      </ConfigSection>
+          <ConfigSection>
+            <Label htmlFor="apiKey">API Key</Label>
+            <Input
+              id="apiKey"
+              type="text"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter API key (default: mobile)"
+            />
+          </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="bearerToken">Bearer Token</Label>
-        <TextArea
-          id="bearerToken"
-          value={bearerToken}
-          onChange={(e) => setBearerToken(e.target.value)}
-          placeholder="Paste your bearer token here..."
-        />
-        <small style={{ color: '#666' }}>
-          This token is used to authenticate with the EG Retail POS API. 
-          You can get this token from the EG Retail portal.
-        </small>
-      </ConfigSection>
+          <ConfigSection>
+            <Label htmlFor="bearerToken">POS API Bearer Token</Label>
+            <TextArea
+              id="bearerToken"
+              value={bearerToken}
+              onChange={(e) => setBearerToken(e.target.value)}
+              placeholder="Paste your POS API bearer token here..."
+            />
+            <small style={{ color: '#666', fontSize: '14px' }}>
+              🔑 Get this token from the EG Retail portal for POS API access
+            </small>
+          </ConfigSection>
 
-      {statusMessage && (
-        <StatusIndicator 
-          $status={
-            connectionStatus === 'success' ? 'success' :
-            connectionStatus === 'error' ? 'error' :
-            connectionStatus === 'testing' ? 'info' : 'info'
-          }
-        >
-          <div style={{ whiteSpace: 'pre-line' }}>
-            <strong>POS API:</strong> {environment.toUpperCase()}
-            <br />
-            {statusMessage}
-          </div>
-        </StatusIndicator>
-      )}
+          <ButtonGroup>
+            <Button onClick={savePOSApiConfig} variant="primary">
+              💾 Save POS Config
+            </Button>
+            <Button onClick={testPOSApiConnection} variant="secondary" disabled={connectionStatus === 'testing'}>
+              {connectionStatus === 'testing' ? '🔄 Testing...' : '🔍 Test Connection'}
+            </Button>
+            <Button onClick={clearPOSApiConfig} variant="danger">
+              🗑️ Clear Config
+            </Button>
+          </ButtonGroup>
 
-      <ConfigSection>
-        <Button 
-          variant="primary" 
-          onClick={saveConfiguration}
-        >
-          💾 Save Config
-        </Button>
-
-        <Button 
-          variant="secondary" 
-          onClick={testConnection}
-          disabled={connectionStatus === 'testing'}
-        >
-          🔄 Test Connection
-        </Button>
-
-        <Button 
-          variant="success" 
-          onClick={createTestCart}
-          disabled={connectionStatus === 'testing' || !bearerToken}
-        >
-          🛒 Create Test Cart
-        </Button>
-
-        <Button 
-          variant="warning" 
-          onClick={testCheckout}
-          disabled={connectionStatus === 'testing' || !bearerToken}
-        >
-          💳 Test Checkout
-        </Button>
-
-        <Button 
-          variant="danger" 
-          onClick={clearConfiguration}
-        >
-          🗑️ Clear All
-        </Button>
-      </ConfigSection>
-
-      <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #eee' }} />
-
-      {/* Item Service Configuration */}
-      <h2>📦 Item Service Configuration</h2>
-      
-      <ConfigSection>
-        <h3>Item Service Status</h3>
-        <div>
-          <strong>Token Status:</strong> {itemBearerToken ? '✅ Set' : '❌ Not set'}<br/>
-          <strong>Environment:</strong> {itemEnvironment}<br/>
-          <strong>Service Status:</strong> {itemService.getStatus().ready ? '✅ Ready' : '❌ Not Ready'}<br/>
-          {cacheStats && (
-            <>
-              <strong>Cache:</strong> {cacheStats.totalItems} items cached<br/>
-            </>
+          {connectionStatus !== 'idle' && (
+            <StatusIndicator $status={connectionStatus === 'testing' ? 'info' : connectionStatus}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '12px' }}>
+                {statusMessage}
+              </pre>
+            </StatusIndicator>
           )}
-        </div>
-      </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="itemEnvironment">Item Service Environment</Label>
-        <Select 
-          id="itemEnvironment" 
-          value={itemEnvironment} 
-          onChange={(e) => setItemEnvironment(e.target.value as POSEnvironment)}
-        >
-          <option value="dev">Development (via proxy → itemservice-dev.egretail.cloud/api)</option>
-          <option value="test">Test (via proxy → itemservice-test.egretail.cloud/api)</option>
-          <option value="prod">Production (via proxy → itemservice.egretail.cloud/api)</option>
-        </Select>
-      </ConfigSection>
+          <ConfigSection>
+            <SectionTitle>🛍️ Item Service Status</SectionTitle>
+            <StatusIndicator $status={itemService.isReady() ? 'success' : 'warning'}>
+              <strong>Status:</strong> {itemService.isReady() ? '✅ Ready' : '⚠️ Not Ready'}<br/>
+              <strong>Environment:</strong> {itemEnvironment}<br/>
+              <strong>Cache:</strong> {cacheStats ? `${cacheStats.totalItems} items` : 'No cache data'}
+            </StatusIndicator>
+          </ConfigSection>
 
-      <ConfigSection>
-        <Label htmlFor="itemBearerToken">Item Service Bearer Token</Label>
-        <TextArea
-          id="itemBearerToken"
-          value={itemBearerToken}
-          onChange={(e) => setItemBearerToken(e.target.value)}
-          placeholder="Paste your Item Service bearer token here..."
-        />
-        <small style={{ color: '#666' }}>
-          This token is used to access the EG Retail Item Gateway API for product information and pricing.
-        </small>
-      </ConfigSection>
+          <ConfigSection>
+            <Label htmlFor="itemEnvironment">Item Service Environment</Label>
+            <Select 
+              id="itemEnvironment" 
+              value={itemEnvironment} 
+              onChange={(e) => setItemEnvironment(e.target.value as POSEnvironment)}
+            >
+              <option value="dev">🔧 Development</option>
+              <option value="test">🧪 Test</option>
+              <option value="prod">🚀 Production</option>
+            </Select>
+          </ConfigSection>
 
-      {itemStatusMessage && (
-        <StatusIndicator 
-          $status={
-            itemConnectionStatus === 'success' ? 'success' :
-            itemConnectionStatus === 'error' ? 'error' :
-            itemConnectionStatus === 'testing' ? 'info' : 'info'
-          }
-        >
-          <div style={{ whiteSpace: 'pre-line' }}>
-            <strong>Item Service:</strong> {itemEnvironment.toUpperCase()}
-            <br />
-            {itemStatusMessage}
-          </div>
-        </StatusIndicator>
-      )}
+          <ConfigSection>
+            <Label htmlFor="itemBearerToken">Item Service Bearer Token</Label>
+            <TextArea
+              id="itemBearerToken"
+              value={itemBearerToken}
+              onChange={(e) => setItemBearerToken(e.target.value)}
+              placeholder="Paste your Item Service bearer token here..."
+            />
+            <small style={{ color: '#666', fontSize: '14px' }}>
+              📦 Token for product catalog and inventory access
+            </small>
+          </ConfigSection>
 
-      <ConfigSection>
-        <Button 
-          variant="primary" 
-          onClick={saveItemConfiguration}
-        >
-          💾 Save Item Config
-        </Button>
+          <ButtonGroup>
+            <Button onClick={saveItemServiceConfig} variant="primary">
+              💾 Save Item Config
+            </Button>
+            <Button onClick={testItemServiceConnection} variant="secondary" disabled={itemConnectionStatus === 'testing'}>
+              {itemConnectionStatus === 'testing' ? '🔄 Testing...' : '🔍 Test Items'}
+            </Button>
+            <Button onClick={clearItemServiceConfig} variant="danger">
+              🗑️ Clear Items
+            </Button>
+          </ButtonGroup>
 
-        <Button 
-          variant="secondary" 
-          onClick={testItemConnection}
-          disabled={itemConnectionStatus === 'testing'}
-        >
-          🔄 Test Item Service
-        </Button>
+          {itemConnectionStatus !== 'idle' && (
+            <StatusIndicator $status={itemConnectionStatus === 'testing' ? 'info' : itemConnectionStatus}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '12px' }}>
+                {itemStatusMessage}
+              </pre>
+            </StatusIndicator>
+          )}
 
-        <Button 
-          variant="success" 
-          onClick={testItemLookup}
-          disabled={itemConnectionStatus === 'testing' || !itemBearerToken}
-        >
-          🔍 Test Item Lookup
-        </Button>
-
-        <Button 
-          variant="success" 
-          onClick={testSpecificGtin}
-          disabled={itemConnectionStatus === 'testing' || !itemBearerToken}
-        >
-          🎯 Test GTIN 7323342206972
-        </Button>
-
-        <Button 
-          variant="warning" 
-          onClick={clearItemCache}
-        >
-          🗑️ Clear Cache
-        </Button>
-      </ConfigSection>
-
-      <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #eee' }} />
-
-      <ConfigSection>
-        <Button 
-          variant="secondary" 
-          onClick={onClose}
-        >
-          ❌ Close
-        </Button>
-      </ConfigSection>
-    </ConfigContainer>
+          <ConfigSection>
+            <SectionTitle>🧪 Advanced Testing</SectionTitle>
+            <ButtonGroup>
+              <Button onClick={testFullWorkflow} variant="warning">
+                🔄 Full Workflow Test
+              </Button>
+              <Button onClick={testCachePerformance} variant="secondary">
+                ⚡ Cache Performance
+              </Button>
+            </ButtonGroup>
+          </ConfigSection>
+        </ConfigContent>
+      </ConfigContainer>
+    </ConfigOverlay>
   );
 };
+
+export default POSConfig;

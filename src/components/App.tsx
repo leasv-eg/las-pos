@@ -213,13 +213,6 @@ export const App: React.FC = () => {
         </StatusBar>
 
         <MainContent>
-          {showPOSConfig && (
-            <POSConfig 
-              isVisible={showPOSConfig}
-              onClose={() => setShowPOSConfig(false)}
-            />
-          )}
-          
           {!appState.isAuthenticated ? (
             <LoginScreen onLogin={handleLogin} />
           ) : useModularInterface ? (
@@ -234,6 +227,13 @@ export const App: React.FC = () => {
               isTrainingMode={appState.isTrainingMode}
               onLogout={handleLogout}
               onToggleTrainingMode={toggleTrainingMode}
+            />
+          )}
+          
+          {showPOSConfig && (
+            <POSConfig 
+              isVisible={showPOSConfig}
+              onClose={() => setShowPOSConfig(false)}
             />
           )}
         </MainContent>

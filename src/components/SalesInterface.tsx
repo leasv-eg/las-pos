@@ -9,6 +9,7 @@ import { db } from '../services/database';
 import { posApiService } from '../services/posApi';
 import { itemService } from '../services/itemService';
 import { productImageService } from '../services/imageService';
+import { mediaQueries, spacing, panelSizes } from '../styles/responsive';
 
 const SalesContainer = styled.div`
   display: flex;
@@ -16,6 +17,15 @@ const SalesContainer = styled.div`
   height: 100%;
   gap: 1px;
   background-color: #e0e0e0;
+  
+  ${mediaQueries.mobile} {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  ${mediaQueries.tabletPortrait} {
+    flex-direction: column;
+  }
 `;
 
 const Panel = styled.div`
@@ -26,27 +36,80 @@ const Panel = styled.div`
 `;
 
 const LeftPanel = styled(Panel)`
-  flex: 0 0 300px;
-  min-width: 300px;
+  flex: 0 0 ${panelSizes.desktop.basket};
+  min-width: ${panelSizes.desktop.basket};
+  
+  ${mediaQueries.tablet} {
+    flex: 0 0 ${panelSizes.tablet.basket};
+    min-width: ${panelSizes.tablet.basket};
+  }
+  
+  ${mediaQueries.mobile} {
+    flex: 1;
+    min-width: auto;
+    max-height: 40vh;
+    order: 3; // Show basket at bottom on mobile
+  }
+  
+  ${mediaQueries.tabletPortrait} {
+    flex: 0 0 200px;
+    min-width: auto;
+    order: 1;
+  }
 `;
 
 const CenterPanel = styled(Panel)`
   flex: 1;
-  min-width: 400px;
+  min-width: 300px;
+  
+  ${mediaQueries.mobile} {
+    flex: 2;
+    min-width: auto;
+    order: 1; // Show action pad at top on mobile
+  }
+  
+  ${mediaQueries.tabletPortrait} {
+    flex: 1;
+    order: 2;
+  }
 `;
 
 const RightPanel = styled(Panel)`
-  flex: 0 0 320px;
-  min-width: 320px;
+  flex: 0 0 ${panelSizes.desktop.insight};
+  min-width: ${panelSizes.desktop.insight};
+  
+  ${mediaQueries.tablet} {
+    flex: 0 0 ${panelSizes.tablet.insight};
+    min-width: ${panelSizes.tablet.insight};
+  }
+  
+  ${mediaQueries.mobile} {
+    flex: 1;
+    min-width: auto;
+    max-height: 30vh;
+    order: 2; // Show insight in middle on mobile
+  }
+  
+  ${mediaQueries.tabletPortrait} {
+    flex: 0 0 180px;
+    min-width: auto;
+    order: 3;
+  }
 `;
 
 const PanelHeader = styled.div`
-  padding: 16px 20px;
+  padding: ${spacing.md} ${spacing.lg};
   border-bottom: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 60px;
+  
+  ${mediaQueries.mobile} {
+    padding: ${spacing.sm} ${spacing.md};
+    min-height: 48px;
+  }
 `;
 
 const PanelTitle = styled.h2`
@@ -54,18 +117,24 @@ const PanelTitle = styled.h2`
   font-size: 18px;
   font-weight: 600;
   color: #333;
+  
+  ${mediaQueries.mobile} {
+    font-size: 16px;
+  }
 `;
 
 const ActionButton = styled.button`
-  padding: 8px 16px;
+  padding: ${spacing.sm} ${spacing.md};
   background: #1976d2;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-height: 44px;
+  min-width: 44px;
 
   &:hover {
     background: #1565c0;
@@ -75,11 +144,17 @@ const ActionButton = styled.button`
     background: #ccc;
     cursor: not-allowed;
   }
+  
+  ${mediaQueries.mobile} {
+    font-size: 16px;
+    padding: ${spacing.md};
+  }
 `;
 
 const PanelContent = styled.div`
   flex: 1;
   overflow: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 `;
 
 interface SalesInterfaceProps {
